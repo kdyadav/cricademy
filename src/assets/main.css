@@ -1,0 +1,85 @@
+@import 'tailwindcss';
+
+/* Cricket Green design tokens — clean white surfaces, strong pitch-green brand */
+@theme {
+  --font-serif: 'Newsreader', ui-serif, Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+
+  /* Neutrals */
+  --color-ink: #1c1f1d;
+  --color-ink-muted: #6f7571;
+  --color-hairline: #e8ebe9;
+  --color-app: #f5f6f5;
+  --color-card: #ffffff;
+
+  /* Pitch green (brand) */
+  --color-turf: #00a35c;
+  --color-turf-600: #008a4e;
+  --color-turf-700: #00733f;
+  --color-turf-900: #0d3b27; /* Pavilion green — selected pills, dark chips */
+
+  /* Test match whites */
+  --color-flannel: #fbfaf5;
+
+  /* Cricket ball cherry */
+  --color-cherry: #d7263d;
+  --color-cherry-soft: #fdebee;
+
+  /* Trophy gold / pitch clay */
+  --color-gold: #f2a900;
+  --color-clay: #b4690e;
+  --color-gold-soft: #fff5d9;
+
+  /* Green tints */
+  --color-mint: #e7f7ef;
+  --color-mint-strong: #c3ecd6;
+
+  --shadow-card: 0 0 0 1px rgb(232 235 233 / 0.9);
+  --shadow-float: 0 8px 28px -10px rgb(0 0 0 / 0.18);
+}
+
+@layer base {
+  html,
+  body {
+    @apply bg-app font-sans text-ink antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  ::selection {
+    background: rgb(0 163 92 / 0.15);
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-serif;
+  }
+}
+
+@utility hairline {
+  @apply border border-hairline;
+}
+
+@utility card {
+  @apply rounded-xl border border-hairline bg-card;
+}
+
+@utility field-input {
+  @apply w-full rounded-lg border border-hairline bg-card px-3.5 py-3 text-base text-ink outline-none transition placeholder:text-ink-muted/60 focus:border-turf focus:ring-2 focus:ring-turf/15 aria-invalid:border-cherry aria-invalid:ring-cherry/10;
+}
+
+/* Mown-outfield stripes */
+@utility outfield-stripes {
+  background: repeating-linear-gradient(90deg, #00a35c 0 18px, #00894d 18px 36px);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+}
