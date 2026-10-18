@@ -11,8 +11,136 @@
       href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..800;1,6..72,400..800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <style>
+      #splash {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        color: #fff;
+        background:
+          repeating-linear-gradient(90deg, rgb(255 255 255 / 0.025) 0 44px, transparent 44px 88px),
+          radial-gradient(120% 80% at 50% 38%, #145a3a 0%, #0d3b27 55%, #072619 100%);
+        font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+        transition: opacity 0.45s ease, visibility 0.45s;
+      }
+      #splash.splash-hide {
+        opacity: 0;
+        visibility: hidden;
+      }
+      #splash .splash-crest {
+        width: 92px;
+        height: 101px;
+        filter: drop-shadow(0 14px 28px rgb(0 0 0 / 0.35));
+        animation: splash-rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+      #splash .splash-name {
+        margin: 22px 0 0;
+        font-family: 'Newsreader', ui-serif, Georgia, serif;
+        font-size: 30px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        animation: splash-rise 0.7s 0.12s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+      #splash .splash-tagline {
+        margin: 8px 0 0;
+        color: #f2a900;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        animation: splash-rise 0.7s 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+      }
+      #splash .splash-pitch {
+        position: relative;
+        width: 132px;
+        height: 22px;
+        margin-top: 44px;
+        animation: splash-fade 0.6s 0.4s both;
+      }
+      #splash .splash-pitch::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: 2px;
+        border-radius: 2px;
+        background: rgb(255 255 255 / 0.16);
+      }
+      #splash .splash-ball {
+        position: absolute;
+        bottom: 3px;
+        left: 0;
+        width: 16px;
+        height: 16px;
+        animation: splash-roll 1.6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+      }
+      #splash .splash-foot {
+        position: absolute;
+        bottom: calc(28px + env(safe-area-inset-bottom));
+        margin: 0;
+        color: rgb(255 255 255 / 0.55);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+      }
+      #splash .splash-stripes {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: 4px;
+        background: repeating-linear-gradient(90deg, #00a35c 0 18px, #00894d 18px 36px);
+      }
+      @keyframes splash-rise {
+        from { opacity: 0; transform: translateY(12px) scale(0.96); }
+      }
+      @keyframes splash-fade {
+        from { opacity: 0; }
+      }
+      @keyframes splash-roll {
+        from { transform: translateX(0) rotate(0deg); }
+        to { transform: translateX(116px) rotate(540deg); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #splash *, #splash { animation: none !important; transition: none !important; }
+        #splash .splash-ball { left: 58px; }
+      }
+    </style>
   </head>
   <body>
+    <div id="splash" role="status" aria-label="Loading Apex Cricket Academy">
+      <svg class="splash-crest" viewBox="0 0 40 44" aria-hidden="true">
+        <path d="M20 1 L38 7 V20 C38 32 30 39 20 43 C10 39 2 32 2 20 V7 Z" fill="#FFFFFF" stroke="#F2A900" stroke-width="1.5" />
+        <path d="M20 5 L34 9.5 V20 C34 29.5 27.5 35 20 38.5 C12.5 35 6 29.5 6 20 V9.5 Z" fill="#00A35C" />
+        <g stroke="#F8FCF9" stroke-width="2.2" stroke-linecap="round">
+          <line x1="13" y1="13" x2="26" y2="30" />
+          <line x1="27" y1="13" x2="14" y2="30" />
+        </g>
+        <g stroke="#F2A900" stroke-width="1.4" stroke-linecap="round">
+          <line x1="17" y1="24" x2="17" y2="33" />
+          <line x1="20" y1="24" x2="20" y2="33" />
+          <line x1="23" y1="24" x2="23" y2="33" />
+          <line x1="16.5" y1="23.5" x2="23.5" y2="23.5" />
+        </g>
+        <circle cx="20" cy="11" r="2.2" fill="#D7263D" />
+      </svg>
+      <p class="splash-name">Apex Cricket Academy</p>
+      <p class="splash-tagline">Excellence on Willow &amp; Turf</p>
+      <div class="splash-pitch" aria-hidden="true">
+        <svg class="splash-ball" viewBox="0 0 16 16">
+          <circle cx="8" cy="8" r="7.5" fill="#D7263D" />
+          <path d="M4.2 1.6 C7 5 7 11 4.2 14.4 M11.8 1.6 C9 5 9 11 11.8 14.4" fill="none" stroke="#FBE3E6" stroke-width="0.9" stroke-dasharray="1.2 1" />
+        </svg>
+      </div>
+      <p class="splash-foot">Coach Console</p>
+      <div class="splash-stripes" aria-hidden="true"></div>
+    </div>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
