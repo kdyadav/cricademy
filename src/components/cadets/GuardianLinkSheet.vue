@@ -24,6 +24,7 @@ import { isEmailContact, type GuardianInviteFormInput } from '@/schemas/guardian
 import { LINK_STATUS_LABELS, PERMISSION_OPTIONS } from '@/data/options'
 import { formatDuration, minutesUntil } from '@/lib/time'
 import { cn } from '@/lib/cn'
+import { whatsappNumber } from '@/lib/fees'
 
 const props = defineProps<{ cadetId: string | null }>()
 const open = defineModel<boolean>('open', { required: true })
@@ -55,10 +56,7 @@ const shareHref = computed(() => {
   if (isEmailContact(c.guardian.contact)) {
     return `mailto:${c.guardian.contact}?subject=${encodeURIComponent(`Link your account with ${c.name}`)}&body=${encodeURIComponent(text)}`
   }
-  let digits = c.guardian.contact.replace(/\D/g, '')
-  if (digits.length === 11 && digits.startsWith('0')) digits = digits.slice(1)
-  if (digits.length === 10) digits = `91${digits}`
-  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`
+  return `https://wa.me/${whatsappNumber(c.guardian.contact)}?text=${encodeURIComponent(text)}`
 })
 
 async function copyLink() {

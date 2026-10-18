@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { ChevronLeft, CircleDollarSign, LoaderCircle, ShieldCheck, UserPlus } from 'lucide-vue-next'
+import { ChevronLeft, IndianRupee, LoaderCircle, ShieldCheck, UserPlus } from 'lucide-vue-next'
 import UiAvatar from '@/components/ui/UiAvatar.vue'
 import GuardianLinkSheet from '@/components/cadets/GuardianLinkSheet.vue'
 import BenchmarkList from '@/components/stats/BenchmarkList.vue'
@@ -10,6 +10,7 @@ import { useCadetsStore } from '@/stores/cadets'
 import { usePlayerStatsStore } from '@/stores/playerStats'
 import { LINK_STATUS_LABELS } from '@/data/options'
 import { cn } from '@/lib/cn'
+import { formatInr } from '@/lib/fees'
 
 const props = defineProps<{ id: string }>()
 
@@ -97,7 +98,7 @@ const sheetOpen = ref(false)
               {{ cadet.linkStatus === 'unlinked' ? 'Invite guardian' : LINK_STATUS_LABELS[cadet.linkStatus] }}
             </button>
             <span v-if="cadet.feeDue" class="inline-flex items-center gap-1 rounded-full bg-cherry-soft px-2 py-0.5 text-cherry">
-              <CircleDollarSign class="size-3" /> ${{ cadet.feeDue }} due
+              <IndianRupee class="size-3" /> {{ formatInr(cadet.feeDue) }} due
             </span>
           </div>
         </div>

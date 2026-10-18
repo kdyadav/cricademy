@@ -1,5 +1,7 @@
 import type { CadetRepository, InviteDelivery } from '../types'
 import type { Cadet } from '@/types'
+import { newId } from '@/lib/id'
+import { removeCadetDues } from './feeRepository'
 import { readCadets, writeCadets } from './cadetStore'
 import { readSessions, writeSessions } from './telemetryRepository'
 
@@ -29,7 +31,7 @@ export function createMockCadetRepository(): CadetRepository {
     },
     async create(_coachId, input) {
       await latency()
-      const cadet: Cadet = { ...structuredClone(input), id: crypto.randomUUID(), linkStatus: 'unlinked' }
+      const cadet: Cadet = { ...structuredClone(input), id: newId(), linkStatus: 'unlinked', feeDue: 0 }
       writeCadets([...readCadets(), cadet])
       return structuredClone(cadet)
     },
@@ -41,6 +43,7 @@ export function createMockCadetRepository(): CadetRepository {
       await latency()
       writeCadets(readCadets().filter((c) => c.id !== cadetId))
       writeSessions(readSessions().filter((s) => s.cadetId !== cadetId))
+      removeCadetDues(cadetId)
     },
     async sendGuardianInvite(cadetId, guardian) {
       await latency(500)

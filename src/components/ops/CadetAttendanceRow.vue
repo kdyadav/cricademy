@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ChevronDown, CircleDollarSign, Link2Off, StickyNote, Undo2 } from 'lucide-vue-next'
+import { ChevronDown, IndianRupee, Link2Off, StickyNote, Undo2 } from 'lucide-vue-next'
 import UiAvatar from '@/components/ui/UiAvatar.vue'
 import type { AttendanceRecord, AttendanceStatus, Cadet } from '@/types'
 import { ATTENDANCE_STATUS_OPTIONS, DRILL_FOCUS_OPTIONS, LATE_MINUTE_OPTIONS } from '@/data/options'
 import { STATUS_STYLES } from './statusStyles'
 import { cn } from '@/lib/cn'
+import { formatInr } from '@/lib/fees'
 
 const props = defineProps<{
   cadet: Cadet
@@ -50,7 +51,7 @@ function pick(status: AttendanceStatus) {
             <span v-if="record?.status === 'late'" class="font-semibold text-clay">· {{ record.lateMinutes }}m late</span>
             <span v-if="record?.excusedByParent" class="font-semibold text-turf-700">· Excused</span>
             <span v-if="cadet.feeDue" class="inline-flex items-center gap-0.5 rounded bg-cherry-soft px-1 font-semibold text-cherry">
-              <CircleDollarSign class="size-3" /> ${{ cadet.feeDue }}
+              <IndianRupee class="size-3" /> {{ formatInr(cadet.feeDue) }}
             </span>
             <span v-if="cadet.linkStatus !== 'linked'" class="inline-flex items-center gap-0.5 rounded bg-gold-soft px-1 font-semibold text-clay">
               <Link2Off class="size-3" /> {{ cadet.linkStatus === 'pending' ? 'Invite pending' : 'No guardian' }}

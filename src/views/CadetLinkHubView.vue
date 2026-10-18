@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { CircleDollarSign, LoaderCircle, Search, UserPlus } from 'lucide-vue-next'
+import { ChevronRight, IndianRupee, LoaderCircle, Search, UserPlus } from 'lucide-vue-next'
 import CadetLinkRow from '@/components/cadets/CadetLinkRow.vue'
 import GuardianLinkSheet from '@/components/cadets/GuardianLinkSheet.vue'
 import CadetFormSheet from '@/components/cadets/CadetFormSheet.vue'
@@ -10,6 +10,7 @@ import { useCadetsStore } from '@/stores/cadets'
 import { useOpsStore } from '@/stores/ops'
 import type { AgeGroup, Cadet, LinkStatus } from '@/types'
 import { cn } from '@/lib/cn'
+import { formatInr } from '@/lib/fees'
 
 const auth = useAuthStore()
 const store = useCadetsStore()
@@ -99,9 +100,20 @@ function openForm(cadetId: string | null) {
             <p class="text-[11px] font-semibold tracking-wider text-ink-muted uppercase">Guardian coverage</p>
             <p class="font-serif text-3xl leading-none font-semibold tabular-nums">{{ coverage }}<span class="text-lg">%</span></p>
           </div>
-          <p v-if="feesDueTotal" class="inline-flex items-center gap-1 rounded-full bg-cherry-soft px-2.5 py-1 text-xs font-semibold text-cherry">
-            <CircleDollarSign class="size-3.5" /> ${{ feesDueTotal }} due · {{ feesDueCount }}
-          </p>
+          <RouterLink
+            :to="{ name: 'fees' }"
+            :class="
+              cn(
+                'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold',
+                feesDueTotal ? 'bg-cherry-soft text-cherry hover:bg-cherry/15' : 'border border-hairline text-ink-muted hover:bg-app',
+              )
+            "
+          >
+            <IndianRupee class="size-3.5" />
+            <template v-if="feesDueTotal">{{ formatInr(feesDueTotal) }} due · {{ feesDueCount }}</template>
+            <template v-else>Fees</template>
+            <ChevronRight class="size-3.5" />
+          </RouterLink>
         </div>
         <div class="mt-3 flex h-2 overflow-hidden rounded-full bg-app" role="presentation">
           <span

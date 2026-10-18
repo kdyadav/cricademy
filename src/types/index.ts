@@ -48,7 +48,35 @@ export interface Cadet {
   guardian?: Guardian
   /** ISO timestamp of when a pending invite expires */
   inviteExpiresAt?: string
+  /** Sum of the cadet's open fee dues */
   feeDue: number
+}
+
+export type FeeStatus = 'due' | 'paid' | 'waived'
+export type PaymentMethod = 'upi' | 'cash' | 'other'
+
+export interface FeeDue {
+  id: string
+  cadetId: string
+  title: string
+  amount: number
+  /** `YYYY-MM-DD` */
+  dueDate: string
+  status: FeeStatus
+  paidAt?: string
+  method?: PaymentMethod
+  /** UTR or receipt number recorded by the coach */
+  reference?: string
+  /** UTR submitted by the payer on the pay page, awaiting the coach's confirmation */
+  reportedReference?: string
+  reportedAt?: string
+  remindedAt?: string
+}
+
+/** Where parents pay: the academy's UPI ID (PhonePe or any UPI app) and the name shown to them. */
+export interface FeeSettings {
+  upiId: string
+  payeeName: string
 }
 
 export type AttendanceStatus = 'present' | 'late' | 'absent' | 'injured'

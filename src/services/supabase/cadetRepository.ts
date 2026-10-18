@@ -53,7 +53,6 @@ const inputToRow = (i: CadetInput) => ({
   batting_hand: i.battingHand,
   bowling_style: i.bowlingStyle?.trim() || null,
   batch_id: i.batchId || null,
-  fee_due: i.feeDue,
 })
 
 export function createSupabaseCadetRepository(client: SupabaseClient): CadetRepository {

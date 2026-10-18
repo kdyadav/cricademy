@@ -2,6 +2,7 @@ import type { TelemetryRepository } from '../types'
 import type { Cadet, NetSession, PlayingRole } from '@/types'
 import { DISMISSAL_TYPES } from '@/data/options'
 import { summarize } from '@/lib/netSession'
+import { newId } from '@/lib/id'
 import { buildTelemetry, mean, rankLeaderboard, round1, type RawStats } from '@/lib/telemetry'
 import { readCadets } from './cadetStore'
 
@@ -114,7 +115,7 @@ export function createMockTelemetryRepository(): TelemetryRepository {
     },
     async saveNetSession(input) {
       await latency(250)
-      const session: NetSession = { ...structuredClone(input), id: crypto.randomUUID(), savedAt: new Date().toISOString() }
+      const session: NetSession = { ...structuredClone(input), id: newId(), savedAt: new Date().toISOString() }
       writeSessions([...readSessions(), session])
       return structuredClone(session)
     },

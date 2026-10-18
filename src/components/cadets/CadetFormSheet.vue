@@ -31,7 +31,6 @@ const [role] = defineField('role')
 const [battingHand] = defineField('battingHand')
 const [bowlingStyle] = defineField('bowlingStyle')
 const [batchId] = defineField('batchId')
-const [feeDue] = defineField('feeDue')
 const err = (path: keyof CadetFormInput) => (submitCount.value > 0 ? errors.value[path] : undefined)
 
 const nextJersey = () => Math.max(0, ...store.cadets.map((c) => c.jersey)) + 1
@@ -44,7 +43,7 @@ watch(open, (isOpen) => {
   resetForm({
     values: c
       ? { ...c, bowlingStyle: c.bowlingStyle ?? '' }
-      : { name: '', jersey: nextJersey(), ageGroup: ops.activeBatch?.ageGroup, role: undefined, battingHand: 'Right', bowlingStyle: '', batchId: ops.activeBatchId ?? '', feeDue: 0 },
+      : { name: '', jersey: nextJersey(), ageGroup: ops.activeBatch?.ageGroup, role: undefined, battingHand: 'Right', bowlingStyle: '', batchId: ops.activeBatchId ?? '' },
   })
 })
 
@@ -97,19 +96,12 @@ function remove() {
         <input id="c-bowling" v-model="bowlingStyle" class="field-input" placeholder="e.g. Right-arm fast" />
         <p v-if="err('bowlingStyle')" class="mt-1 text-xs text-cherry">{{ err('bowlingStyle') }}</p>
       </div>
-      <div class="grid grid-cols-[1fr_7rem] gap-3">
-        <div>
-          <label for="c-batch" class="mb-1 block text-xs font-semibold text-ink-muted">Net batch</label>
-          <select id="c-batch" v-model="batchId" class="field-input">
-            <option value="">Not in a batch</option>
-            <option v-for="b in ops.batches" :key="b.id" :value="b.id">{{ b.label }}</option>
-          </select>
-        </div>
-        <div>
-          <label for="c-fee" class="mb-1 block text-xs font-semibold text-ink-muted">Fees due ($)</label>
-          <input id="c-fee" v-model="feeDue" type="number" inputmode="decimal" min="0" step="1" class="field-input" :aria-invalid="!!err('feeDue')" />
-          <p v-if="err('feeDue')" class="mt-1 text-xs text-cherry">{{ err('feeDue') }}</p>
-        </div>
+      <div>
+        <label for="c-batch" class="mb-1 block text-xs font-semibold text-ink-muted">Net batch</label>
+        <select id="c-batch" v-model="batchId" class="field-input">
+          <option value="">Not in a batch</option>
+          <option v-for="b in ops.batches" :key="b.id" :value="b.id">{{ b.label }}</option>
+        </select>
       </div>
 
       <button

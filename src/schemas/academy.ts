@@ -28,7 +28,6 @@ export const cadetSchema = z.object({
   battingHand: z.enum(['Right', 'Left']),
   bowlingStyle: z.string().trim().max(40, 'Keep it under 40 characters').optional(),
   batchId: z.string(),
-  feeDue: z.coerce.number({ invalid_type_error: 'Enter an amount' }).min(0, 'Cannot be negative').max(100_000, 'Too large'),
 })
 
 export type CadetFormInput = z.infer<typeof cadetSchema>

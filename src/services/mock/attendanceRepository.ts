@@ -1,6 +1,7 @@
 import type { AttendanceRepository, AttendanceSheet } from '../types'
 import type { NetBatch } from '@/types'
 import { mockBatches } from '@/data/mock'
+import { newId } from '@/lib/id'
 import { readCadets, writeCadets } from './cadetStore'
 import { readSessions, writeSessions } from './telemetryRepository'
 
@@ -42,7 +43,7 @@ export function createMockAttendanceRepository(): AttendanceRepository {
     },
     async createBatch(_coachId, input) {
       await latency()
-      const batch: NetBatch = { ...input, id: crypto.randomUUID() }
+      const batch: NetBatch = { ...input, id: newId() }
       writeBatches([...readBatches(), batch])
       return structuredClone(batch)
     },

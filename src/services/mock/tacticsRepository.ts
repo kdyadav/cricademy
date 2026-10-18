@@ -1,5 +1,6 @@
 import type { TacticsRepository } from '../types'
 import type { MatchPlan } from '@/types'
+import { newId } from '@/lib/id'
 
 const STORAGE_KEY = 'cricademy:match-plans'
 
@@ -27,7 +28,7 @@ export function createMockTacticsRepository(): TacticsRepository {
     },
     async create(_coachId, input) {
       await latency()
-      const plan: MatchPlan = { ...structuredClone(input), id: crypto.randomUUID(), updatedAt: new Date().toISOString() }
+      const plan: MatchPlan = { ...structuredClone(input), id: newId(), updatedAt: new Date().toISOString() }
       writePlans([...readPlans(), plan])
       return structuredClone(plan)
     },

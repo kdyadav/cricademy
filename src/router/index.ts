@@ -26,6 +26,13 @@ const router = createRouter({
       meta: { title: 'Guardian invite', public: true, guardian: true },
     },
     {
+      path: '/pay/:id',
+      name: 'fee-payment',
+      component: () => import('@/views/FeePaymentView.vue'),
+      props: true,
+      meta: { title: 'Fee payment', public: true, guardian: true },
+    },
+    {
       path: '/unavailable',
       name: 'profile-unavailable',
       component: () => import('@/views/ProfileUnavailableView.vue'),
@@ -44,6 +51,7 @@ const router = createRouter({
       children: [
         { path: 'ops', name: 'ops', component: () => import('@/views/DailyOpsView.vue'), meta: { tab: 'ops' } },
         { path: 'cadets', name: 'cadets', component: () => import('@/views/CadetLinkHubView.vue'), meta: { tab: 'cadets' } },
+        { path: 'cadets/fees', name: 'fees', component: () => import('@/views/FeesView.vue'), meta: { tab: 'cadets' } },
         {
           path: 'cadets/:id',
           name: 'player-stats',

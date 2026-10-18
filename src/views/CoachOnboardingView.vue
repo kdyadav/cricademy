@@ -12,6 +12,7 @@ import { coachProfileSchema, type BatchScheduleInput } from '@/schemas/coach'
 import { ACCREDITATION_OPTIONS, DISCIPLINE_OPTIONS } from '@/data/options'
 import type { Accreditation, Discipline } from '@/types'
 import { cn } from '@/lib/cn'
+import { newId } from '@/lib/id'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -19,7 +20,7 @@ const coach = useCoachStore()
 const existing = coach.profile
 const isNew = existing === null
 
-const emptySchedule = (): BatchScheduleInput => ({ id: crypto.randomUUID(), label: '', start: '', end: '' })
+const emptySchedule = (): BatchScheduleInput => ({ id: newId(), label: '', start: '', end: '' })
 
 const { handleSubmit, defineField, errors, values, isSubmitting, submitCount, validate } = useForm({
   validationSchema: toTypedSchema(coachProfileSchema),
@@ -29,7 +30,7 @@ const { handleSubmit, defineField, errors, values, isSubmitting, submitCount, va
     disciplines: existing ? [...existing.disciplines] : [],
     facility: existing?.facility ?? '',
     pitch: existing?.pitch ?? '',
-    schedules: existing ? structuredClone(existing.schedules) : [emptySchedule()],
+    schedules: existing ? existing.schedules.map(({ id, label, start, end }) => ({ id, label, start, end })) : [emptySchedule()],
   },
 })
 

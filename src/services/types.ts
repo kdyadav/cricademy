@@ -3,11 +3,15 @@ import type {
   BattingTelemetry,
   Cadet,
   CoachProfile,
+  FeeDue,
+  FeeSettings,
+  FeeStatus,
   Guardian,
   LeaderboardEntry,
   MatchPlan,
   NetBatch,
   NetSession,
+  PaymentMethod,
 } from '@/types'
 
 /** Mirrors the subset of Supabase's `User` the app relies on. */
@@ -84,7 +88,7 @@ export interface AttendanceRepository {
 export type GuardianInviteInput = Omit<Guardian, 'verified'>
 
 /** Coach-editable cadet fields; an empty `batchId` means the cadet is not in a batch. */
-export type CadetInput = Pick<Cadet, 'name' | 'jersey' | 'ageGroup' | 'role' | 'battingHand' | 'bowlingStyle' | 'batchId' | 'feeDue'>
+export type CadetInput = Pick<Cadet, 'name' | 'jersey' | 'ageGroup' | 'role' | 'battingHand' | 'bowlingStyle' | 'batchId'>
 
 /**
  * How the invite reached the guardian: `sent` over WhatsApp, or `manual` when the coach must share
@@ -144,6 +148,47 @@ export interface TelemetryRepository {
   listNetSessions(batchId: string, date: string): Promise<NetSession[]>
   /** Logged deliveries are folded into the cadet's telemetry and leaderboard figures. */
   saveNetSession(session: Omit<NetSession, 'id' | 'savedAt'>): Promise<NetSession>
+}
+
+export type FeeDueInput = Pick<FeeDue, 'title' | 'amount' | 'dueDate'>
+
+export interface FeePaymentInput {
+  method: PaymentMethod
+  reference?: string
+}
+
+/** Every change to a due also updates the cadet's `feeDue` total. */
+export interface FeeRepository {
+  getSettings(coachId: string): Promise<FeeSettings | null>
+  saveSettings(coachId: string, settings: FeeSettings): Promise<FeeSettings>
+  /** Newest due date first. */
+  list(coachId: string): Promise<FeeDue[]>
+  /** Raises the same due for each cadet. */
+  create(coachId: string, cadetIds: string[], input: FeeDueInput): Promise<FeeDue[]>
+  markPaid(dueId: string, payment: FeePaymentInput): Promise<FeeDue>
+  /** Waives a due, or reopens a paid or waived one with `due`. */
+  setStatus(dueId: string, status: Exclude<FeeStatus, 'paid'>): Promise<FeeDue>
+  markReminded(dueId: string): Promise<FeeDue>
+  remove(dueId: string): Promise<void>
+}
+
+export interface FeePaymentPreview {
+  status: FeeStatus
+  title: string
+  amount: number
+  dueDate: string
+  cadetName: string
+  /** `null` when the coach has not set up UPI payments. */
+  payee: FeeSettings | null
+  reported: boolean
+}
+
+/** Payer side of the `/pay/:id` link; works without signing in. */
+export interface FeePaymentService {
+  /** Returns `null` for an unknown id. */
+  preview(dueId: string): Promise<FeePaymentPreview | null>
+  /** Sends the UPI transaction reference for the coach to confirm. Rejects with a message safe to show. */
+  report(dueId: string, reference: string): Promise<void>
 }
 
 export type MatchPlanInput = Omit<MatchPlan, 'id' | 'updatedAt'>

@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { BadgeCheck, ChevronRight, CircleDollarSign, Clock, Link2Off, UserPlus } from 'lucide-vue-next'
+import { BadgeCheck, ChevronRight, Clock, IndianRupee, Link2Off, UserPlus } from 'lucide-vue-next'
 import UiAvatar from '@/components/ui/UiAvatar.vue'
 import type { Cadet } from '@/types'
 import { formatDuration, minutesUntil } from '@/lib/time'
 import { cn } from '@/lib/cn'
+import { formatInr } from '@/lib/fees'
 
 const props = defineProps<{ cadet: Cadet; now: Date }>()
 const emit = defineEmits<{ manage: [] }>()
@@ -42,7 +43,7 @@ const expiresIn = computed(() =>
           </span>
           <span v-else class="inline-flex items-center gap-0.5 rounded bg-app px-1 text-ink-muted"><Link2Off class="size-3" /> No guardian</span>
           <span v-if="cadet.feeDue" class="inline-flex items-center gap-0.5 rounded bg-cherry-soft px-1 text-cherry">
-            <CircleDollarSign class="size-3" /> ${{ cadet.feeDue }} due
+            <IndianRupee class="size-3" /> {{ formatInr(cadet.feeDue) }} due
           </span>
         </span>
       </span>

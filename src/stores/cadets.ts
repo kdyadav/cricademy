@@ -11,6 +11,7 @@ import {
 import { useOpsStore } from './ops'
 import { useNetsStore } from './nets'
 import { usePlayerStatsStore } from './playerStats'
+import { useFeesStore } from './fees'
 
 export const useCadetsStore = defineStore('cadets', () => {
   const cadets = ref<Cadet[]>([])
@@ -113,6 +114,7 @@ export const useCadetsStore = defineStore('cadets', () => {
   async function remove(cadetId: string) {
     await cadetRepository.remove(cadetId)
     cadets.value = cadets.value.filter((c) => c.id !== cadetId)
+    useFeesStore().dropCadet(cadetId)
     afterSquadChange()
   }
 
