@@ -27,13 +27,14 @@ export const usePlayerStatsStore = defineStore('playerStats', () => {
   const leaderboardError = ref<string | null>(null)
   let leaderboardFor: string | null = null
 
-  async function loadLeaderboard(coachId: string, force = false) {
-    if (!force && leaderboardFor === coachId) return
+  async function loadLeaderboard(academyId: string, force = false) {
+    if (!force && leaderboardFor === academyId) return
+    if (leaderboardFor !== academyId) leaderboard.value = []
     leaderboardLoading.value = true
     leaderboardError.value = null
     try {
-      leaderboard.value = await telemetryRepository.getLeaderboard(coachId)
-      leaderboardFor = coachId
+      leaderboard.value = await telemetryRepository.getLeaderboard(academyId)
+      leaderboardFor = academyId
     } catch {
       leaderboardError.value = 'Could not load the leaderboard.'
     } finally {

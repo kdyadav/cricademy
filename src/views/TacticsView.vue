@@ -2,19 +2,19 @@
 import { computed, ref, watch } from 'vue'
 import { CalendarDays, ChevronRight, Crown, LoaderCircle, MapPin, Plus, Users } from 'lucide-vue-next'
 import MatchPlanEditor from '@/components/tactics/MatchPlanEditor.vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAcademyStore } from '@/stores/academy'
 import { useCadetsStore } from '@/stores/cadets'
 import { useTacticsStore } from '@/stores/tactics'
 import { localDate } from '@/stores/ops'
 import type { MatchPlan } from '@/types'
 import { cn } from '@/lib/cn'
 
-const auth = useAuthStore()
+const academy = useAcademyStore()
 const squad = useCadetsStore()
 const store = useTacticsStore()
 
 watch(
-  () => auth.user?.id,
+  () => academy.activeId,
   (id) => id && Promise.all([store.load(id), squad.load(id)]),
   { immediate: true },
 )

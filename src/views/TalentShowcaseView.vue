@@ -3,18 +3,18 @@ import { computed, ref, watch } from 'vue'
 import { ChevronRight, Crown, LoaderCircle } from 'lucide-vue-next'
 import UiAvatar from '@/components/ui/UiAvatar.vue'
 import ScoutDossierSheet from '@/components/showcase/ScoutDossierSheet.vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAcademyStore } from '@/stores/academy'
 import { useCadetsStore } from '@/stores/cadets'
 import { usePlayerStatsStore } from '@/stores/playerStats'
 import type { AgeGroup, LeaderboardEntry } from '@/types'
 import { cn } from '@/lib/cn'
 
-const auth = useAuthStore()
+const academy = useAcademyStore()
 const cadets = useCadetsStore()
 const stats = usePlayerStatsStore()
 
 watch(
-  () => auth.user?.id,
+  () => academy.activeId,
   (uid) => {
     if (!uid) return
     cadets.load(uid)
@@ -61,9 +61,9 @@ function openDossier(e: LeaderboardEntry) {
   sheetOpen.value = true
 }
 function retry() {
-  if (!auth.user) return
-  stats.loadLeaderboard(auth.user.id, true)
-  cadets.load(auth.user.id)
+  if (!academy.activeId) return
+  stats.loadLeaderboard(academy.activeId, true)
+  cadets.load(academy.activeId)
 }
 
 const chip = (active: boolean) =>

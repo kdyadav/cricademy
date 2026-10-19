@@ -5,21 +5,21 @@ import { ChevronRight, IndianRupee, LoaderCircle, Search, UserPlus } from 'lucid
 import CadetLinkRow from '@/components/cadets/CadetLinkRow.vue'
 import GuardianLinkSheet from '@/components/cadets/GuardianLinkSheet.vue'
 import CadetFormSheet from '@/components/cadets/CadetFormSheet.vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAcademyStore } from '@/stores/academy'
 import { useCadetsStore } from '@/stores/cadets'
 import { useOpsStore } from '@/stores/ops'
 import type { AgeGroup, Cadet, LinkStatus } from '@/types'
 import { cn } from '@/lib/cn'
 import { formatInr } from '@/lib/fees'
 
-const auth = useAuthStore()
+const academy = useAcademyStore()
 const store = useCadetsStore()
 const ops = useOpsStore()
 const { cadets, loading, error, linkCounts, feesDueTotal, feesDueCount } = storeToRefs(store)
 
 // Batches feed the cadet form's batch picker.
 watch(
-  () => auth.user?.id,
+  () => academy.activeId,
   (id) => id && Promise.all([store.load(id), ops.init(id)]),
   { immediate: true },
 )

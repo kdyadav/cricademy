@@ -9,17 +9,18 @@ export const useTacticsStore = defineStore('tactics', () => {
   const plans = ref<MatchPlan[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
-  let loadedForCoach: string | null = null
+  let loadedForAcademy: string | null = null
 
   const byId = (id: string) => plans.value.find((p) => p.id === id) ?? null
 
-  async function load(coachId: string) {
-    if (loadedForCoach === coachId) return
+  async function load(academyId: string) {
+    if (loadedForAcademy === academyId) return
+    plans.value = []
     loading.value = true
     error.value = null
     try {
-      plans.value = await tacticsRepository.list(coachId)
-      loadedForCoach = coachId
+      plans.value = await tacticsRepository.list(academyId)
+      loadedForAcademy = academyId
     } catch {
       error.value = 'Could not load match plans.'
     } finally {
@@ -28,8 +29,8 @@ export const useTacticsStore = defineStore('tactics', () => {
   }
 
   /** Creates a plan when `planId` is omitted, otherwise updates it. */
-  async function save(coachId: string, input: MatchPlanInput, planId?: string) {
-    const saved = planId ? await tacticsRepository.update(planId, input) : await tacticsRepository.create(coachId, input)
+  async function save(academyId: string, input: MatchPlanInput, planId?: string) {
+    const saved = planId ? await tacticsRepository.update(planId, input) : await tacticsRepository.create(academyId, input)
     plans.value = [...plans.value.filter((p) => p.id !== saved.id), saved].sort(newestFirst)
     return saved
   }

@@ -6,6 +6,7 @@ import type {
   FeePaymentService,
   FeeRepository,
   GuardianInviteService,
+  MembershipService,
   StorageService,
   TacticsRepository,
   TelemetryRepository,
@@ -19,6 +20,7 @@ import { createMockTelemetryRepository } from './mock/telemetryRepository'
 import { createMockTacticsRepository } from './mock/tacticsRepository'
 import { createMockGuardianInviteService } from './mock/guardianInviteService'
 import { createMockFeePaymentService, createMockFeeRepository } from './mock/feeRepository'
+import { createMockMembershipService } from './mock/membershipService'
 import { createSupabaseAuthService } from './supabase/auth'
 import { createSupabaseCoachRepository } from './supabase/coachRepository'
 import { createSupabaseStorageService } from './supabase/storage'
@@ -28,6 +30,7 @@ import { createSupabaseTelemetryRepository } from './supabase/telemetryRepositor
 import { createSupabaseTacticsRepository } from './supabase/tacticsRepository'
 import { createSupabaseGuardianInviteService } from './supabase/guardianInviteService'
 import { createSupabaseFeePaymentService, createSupabaseFeeRepository } from './supabase/feeRepository'
+import { createSupabaseMembershipService } from './supabase/membershipService'
 import { supabase } from '@/lib/supabase'
 
 /** True when VITE_SUPABASE_* env vars are set; every repository then reads and writes Supabase. */
@@ -35,6 +38,9 @@ export const isSupabaseEnabled = supabase !== null
 
 /** Single swap point for backend implementations: Supabase when configured, localStorage mocks otherwise. */
 export const authService: AuthService = supabase ? createSupabaseAuthService(supabase) : createMockAuthService()
+export const membershipService: MembershipService = supabase
+  ? createSupabaseMembershipService(supabase)
+  : createMockMembershipService()
 export const coachRepository: CoachRepository = supabase ? createSupabaseCoachRepository(supabase) : createMockCoachRepository()
 export const storageService: StorageService = supabase ? createSupabaseStorageService(supabase) : createMockStorageService()
 export const attendanceRepository: AttendanceRepository = supabase

@@ -1,13 +1,7 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { Cadet, LinkStatus } from '@/types'
-import {
-  cadetRepository,
-  type CadetInput,
-  type GuardianInviteInput,
-  type GuardianInviteResult,
-  type InviteDelivery,
-} from '@/services'
+import { cadetRepository, type AddMemberResult, type CadetInput, type GuardianInviteInput } from '@/services'
 import { useOpsStore } from './ops'
 import { useNetsStore } from './nets'
 import { usePlayerStatsStore } from './playerStats'
@@ -19,9 +13,9 @@ export const useCadetsStore = defineStore('cadets', () => {
   const error = ref<string | null>(null)
   /** Cadet id with a guardian action in flight. */
   const busyId = ref<string | null>(null)
-  /** Outcome of the latest invite send, shown in the guardian sheet. */
-  const delivery = ref<(InviteDelivery & { cadetId: string }) | null>(null)
-  let loadedForCoach: string | null = null
+  /** Account outcome of the latest guardian added, shown in the guardian sheet; `member` is `null` in demo mode. */
+  const lastAdded = ref<{ cadetId: string; member: AddMemberResult | null } | null>(null)
+  let loadedForAcademy: string | null = null
 
   const linkCounts = computed(() => {
     const c: Record<LinkStatus, number> = { linked: 0, pending: 0, unlinked: 0 }
@@ -33,13 +27,14 @@ export const useCadetsStore = defineStore('cadets', () => {
 
   const byId = (id: string) => cadets.value.find((c) => c.id === id) ?? null
 
-  async function load(coachId: string) {
-    if (loadedForCoach === coachId) return
+  async function load(academyId: string) {
+    if (loadedForAcademy === academyId) return
+    cadets.value = []
     loading.value = true
     error.value = null
     try {
-      cadets.value = await cadetRepository.list(coachId)
-      loadedForCoach = coachId
+      cadets.value = await cadetRepository.list(academyId)
+      loadedForAcademy = academyId
     } catch {
       error.value = 'Could not load the squad.'
     } finally {
@@ -71,28 +66,21 @@ export const useCadetsStore = defineStore('cadets', () => {
     }
   }
 
-  async function deliver(cadetId: string, action: () => Promise<GuardianInviteResult>, failure: string) {
-    delivery.value = null
-    const saved = await run(
+  function addGuardian(academyId: string, cadetId: string, guardian: GuardianInviteInput) {
+    lastAdded.value = null
+    return run(
       cadetId,
       async () => {
-        const result = await action()
-        delivery.value = { cadetId, ...result.delivery }
+        const result = await cadetRepository.addGuardian(academyId, cadetId, guardian)
+        lastAdded.value = { cadetId, member: result.member }
         return result.cadet
       },
-      failure,
+      'Could not add the guardian.',
     )
-    return saved
   }
 
-  const sendInvite = (cadetId: string, guardian: GuardianInviteInput) =>
-    deliver(cadetId, () => cadetRepository.sendGuardianInvite(cadetId, guardian), 'Could not send the invite.')
-
-  const resendInvite = (cadetId: string) =>
-    deliver(cadetId, () => cadetRepository.resendGuardianInvite(cadetId), 'Could not resend the invite.')
-
   const unlink = (cadetId: string) => {
-    delivery.value = null
+    lastAdded.value = null
     return run(cadetId, () => cadetRepository.unlinkGuardian(cadetId), 'Could not remove the guardian.')
   }
 
@@ -104,8 +92,8 @@ export const useCadetsStore = defineStore('cadets', () => {
   }
 
   /** Creates a cadet when `cadetId` is omitted, otherwise updates their details. */
-  async function save(coachId: string, input: CadetInput, cadetId?: string) {
-    const saved = cadetId ? await cadetRepository.update(cadetId, input) : await cadetRepository.create(coachId, input)
+  async function save(academyId: string, input: CadetInput, cadetId?: string) {
+    const saved = cadetId ? await cadetRepository.update(cadetId, input) : await cadetRepository.create(academyId, input)
     cadets.value = cadetId ? cadets.value.map((c) => (c.id === saved.id ? saved : c)) : [...cadets.value, saved]
     afterSquadChange()
     return saved
@@ -119,7 +107,7 @@ export const useCadetsStore = defineStore('cadets', () => {
   }
 
   return {
-    cadets, loading, error, busyId, delivery, linkCounts, feesDueTotal, feesDueCount,
-    byId, load, sendInvite, resendInvite, unlink, save, remove,
+    cadets, loading, error, busyId, lastAdded, linkCounts, feesDueTotal, feesDueCount,
+    byId, load, addGuardian, unlink, save, remove,
   }
 })

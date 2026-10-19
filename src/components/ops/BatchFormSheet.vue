@@ -5,7 +5,7 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { LoaderCircle, Save, Trash2 } from 'lucide-vue-next'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import ChoiceGroup from '@/components/ui/ChoiceGroup.vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAcademyStore } from '@/stores/academy'
 import { useCoachStore } from '@/stores/coach'
 import { useOpsStore } from '@/stores/ops'
 import { netBatchSchema, type NetBatchFormInput } from '@/schemas/academy'
@@ -16,7 +16,7 @@ import { cn } from '@/lib/cn'
 const props = defineProps<{ batch: NetBatch | null }>()
 const open = defineModel<boolean>('open', { required: true })
 
-const auth = useAuthStore()
+const academy = useAcademyStore()
 const coach = useCoachStore()
 const ops = useOpsStore()
 const busy = ref(false)
@@ -60,7 +60,7 @@ async function attempt(action: () => Promise<unknown>, fallback: string) {
 }
 
 const onSubmit = handleSubmit((input) =>
-  attempt(() => ops.saveBatch(auth.user!.id, input, props.batch?.id), 'Could not save the batch.'),
+  attempt(() => ops.saveBatch(academy.activeId!, input, props.batch?.id), 'Could not save the batch.'),
 )
 
 function remove() {
@@ -118,7 +118,7 @@ function remove() {
         {{ batch ? 'Save changes' : 'Add batch' }}
       </button>
       <button
-        v-if="batch"
+        v-if="batch && academy.isOwner"
         type="button"
         :disabled="busy"
         :class="

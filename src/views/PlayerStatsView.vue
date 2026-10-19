@@ -5,7 +5,7 @@ import UiAvatar from '@/components/ui/UiAvatar.vue'
 import GuardianLinkSheet from '@/components/cadets/GuardianLinkSheet.vue'
 import BenchmarkList from '@/components/stats/BenchmarkList.vue'
 import DotBallTrendChart from '@/components/stats/DotBallTrendChart.vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAcademyStore } from '@/stores/academy'
 import { useCadetsStore } from '@/stores/cadets'
 import { usePlayerStatsStore } from '@/stores/playerStats'
 import { LINK_STATUS_LABELS } from '@/data/options'
@@ -14,12 +14,12 @@ import { formatInr } from '@/lib/fees'
 
 const props = defineProps<{ id: string }>()
 
-const auth = useAuthStore()
+const academy = useAcademyStore()
 const cadets = useCadetsStore()
 const stats = usePlayerStatsStore()
 
 watch(
-  () => auth.user?.id,
+  () => academy.activeId,
   (uid) => uid && cadets.load(uid),
   { immediate: true },
 )

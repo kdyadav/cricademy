@@ -11,7 +11,7 @@ export const useFeesStore = defineStore('fees', () => {
   const settings = ref<FeeSettings | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
-  let loadedForCoach: string | null = null
+  let loadedForAcademy: string | null = null
 
   const today = computed(() => localDate())
   const open = computed(() => dues.value.filter((d) => d.status === 'due'))
@@ -27,15 +27,19 @@ export const useFeesStore = defineStore('fees', () => {
 
   const byId = (id: string) => dues.value.find((d) => d.id === id) ?? null
 
-  async function load(coachId: string, force = false) {
-    if (loadedForCoach === coachId && !force) return
+  async function load(academyId: string, force = false) {
+    if (loadedForAcademy === academyId && !force) return
+    if (loadedForAcademy !== academyId) {
+      dues.value = []
+      settings.value = null
+    }
     loading.value = true
     error.value = null
     try {
-      const [list, s] = await Promise.all([feeRepository.list(coachId), feeRepository.getSettings(coachId)])
+      const [list, s] = await Promise.all([feeRepository.list(academyId), feeRepository.getSettings(academyId)])
       dues.value = list
       settings.value = s
-      loadedForCoach = coachId
+      loadedForAcademy = academyId
     } catch {
       error.value = 'Could not load fees.'
     } finally {
@@ -60,8 +64,8 @@ export const useFeesStore = defineStore('fees', () => {
     return saved
   }
 
-  async function raise(coachId: string, cadetIds: string[], input: FeeDueInput) {
-    const created = await feeRepository.create(coachId, cadetIds, input)
+  async function raise(academyId: string, cadetIds: string[], input: FeeDueInput) {
+    const created = await feeRepository.create(academyId, cadetIds, input)
     dues.value = [...created, ...dues.value].sort((a, b) => b.dueDate.localeCompare(a.dueDate))
     syncCadetTotals(cadetIds)
     return created
@@ -78,8 +82,8 @@ export const useFeesStore = defineStore('fees', () => {
     if (due) syncCadetTotals([due.cadetId])
   }
 
-  async function saveSettings(coachId: string, input: FeeSettings) {
-    settings.value = await feeRepository.saveSettings(coachId, input)
+  async function saveSettings(academyId: string, input: FeeSettings) {
+    settings.value = await feeRepository.saveSettings(academyId, input)
   }
 
   /** Cadets can be removed elsewhere; their dues go with them. */

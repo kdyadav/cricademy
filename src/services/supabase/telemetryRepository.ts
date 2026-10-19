@@ -27,10 +27,10 @@ const SESSION_COLUMNS = 'id, cadet_id, batch_id, date, deliveries, saved_at'
 
 /** Figures come only from deliveries logged in the Nets tab; aggregation happens on the client. */
 export function createSupabaseTelemetryRepository(client: SupabaseClient): TelemetryRepository {
-  async function loadSquad(coachId: string) {
+  async function loadSquad(academyId: string) {
     const [cadets, sessions] = await Promise.all([
-      client.from('cadets').select('*').eq('coach_id', coachId).returns<CadetRow[]>(),
-      client.from('net_sessions').select(SESSION_COLUMNS).eq('coach_id', coachId).returns<SessionRow[]>(),
+      client.from('cadets').select('*').eq('academy_id', academyId).returns<CadetRow[]>(),
+      client.from('net_sessions').select(SESSION_COLUMNS).eq('academy_id', academyId).returns<SessionRow[]>(),
     ])
     if (cadets.error || sessions.error) throw new Error('Could not load player stats.')
     const byCadet = new Map<string, NetSession[]>()
@@ -40,16 +40,17 @@ export function createSupabaseTelemetryRepository(client: SupabaseClient): Telem
     return { cadets: cadets.data.map(cadetFromRow), stats }
   }
 
-  async function currentCoachId() {
-    const { data } = await client.auth.getSession()
-    const id = data.session?.user.id
-    if (!id) throw new Error('You are signed out.')
-    return id
+  async function cadetAcademyId(cadetId: string) {
+    const { data, error } = await client.from('cadets').select('academy_id').eq('id', cadetId).maybeSingle<{ academy_id: string }>()
+    if (error) throw new Error('Could not load player stats.')
+    return data?.academy_id ?? null
   }
 
   return {
     async getBattingTelemetry(cadetId) {
-      const { cadets, stats } = await loadSquad(await currentCoachId())
+      const academyId = await cadetAcademyId(cadetId)
+      if (!academyId) return null
+      const { cadets, stats } = await loadSquad(academyId)
       const cadet = cadets.find((c) => c.id === cadetId)
       const me = stats.get(cadetId)
       if (!cadet || !me) return null
@@ -59,8 +60,8 @@ export function createSupabaseTelemetryRepository(client: SupabaseClient): Telem
         .filter((s): s is RawStats => !!s)
       return buildTelemetry(cadetId, me, cohort)
     },
-    async getLeaderboard(coachId) {
-      const { cadets, stats } = await loadSquad(coachId)
+    async getLeaderboard(academyId) {
+      const { cadets, stats } = await loadSquad(academyId)
       return rankLeaderboard(cadets, (c) => stats.get(c.id) ?? null)
     },
     async listNetSessions(batchId, date) {

@@ -5,7 +5,7 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { ChevronLeft, LoaderCircle, Save, Trash2 } from 'lucide-vue-next'
 import ChoiceGroup from '@/components/ui/ChoiceGroup.vue'
 import XiBuilder from './XiBuilder.vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAcademyStore } from '@/stores/academy'
 import { useCadetsStore } from '@/stores/cadets'
 import { useTacticsStore } from '@/stores/tactics'
 import { localDate } from '@/stores/ops'
@@ -17,7 +17,7 @@ import { cn } from '@/lib/cn'
 const props = defineProps<{ plan: MatchPlan | null }>()
 const emit = defineEmits<{ close: [] }>()
 
-const auth = useAuthStore()
+const academy = useAcademyStore()
 const squad = useCadetsStore()
 const store = useTacticsStore()
 
@@ -63,7 +63,7 @@ const onSubmit = handleSubmit((input) =>
   attempt(
     () =>
       store.save(
-        auth.user!.id,
+        academy.activeId!,
         { ...input, xi: xi.value, captainId: captainId.value, keeperId: keeperId.value, notes: notes.value.trim() },
         props.plan?.id,
       ),

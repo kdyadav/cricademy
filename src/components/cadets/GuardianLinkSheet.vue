@@ -1,67 +1,53 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui'
-import {
-  BadgeCheck,
-  Check,
-  Clock,
-  Copy,
-  LoaderCircle,
-  Mail,
-  MessageCircle,
-  Pencil,
-  RotateCw,
-  Send,
-  ShieldCheck,
-  Trash2,
-  UserPen,
-  X,
-} from 'lucide-vue-next'
+import { BadgeCheck, Clock, KeyRound, LoaderCircle, Mail, MessageCircle, Pencil, ShieldCheck, Trash2, UserPen, X } from 'lucide-vue-next'
 import UiAvatar from '@/components/ui/UiAvatar.vue'
+import TemporaryPassword from '@/components/members/TemporaryPassword.vue'
 import GuardianInviteForm from './GuardianInviteForm.vue'
 import { useCadetsStore } from '@/stores/cadets'
+import { useAcademyStore } from '@/stores/academy'
+import { membershipService } from '@/services'
 import { isEmailContact, type GuardianInviteFormInput } from '@/schemas/guardian'
 import { LINK_STATUS_LABELS, PERMISSION_OPTIONS } from '@/data/options'
 import { formatDuration, minutesUntil } from '@/lib/time'
 import { cn } from '@/lib/cn'
-import { whatsappNumber } from '@/lib/fees'
 
 const props = defineProps<{ cadetId: string | null }>()
 const open = defineModel<boolean>('open', { required: true })
 const emit = defineEmits<{ editCadet: [] }>()
 
 const store = useCadetsStore()
+const academy = useAcademyStore()
 const cadet = computed(() => (props.cadetId ? store.byId(props.cadetId) : null))
-const busy = computed(() => !!cadet.value && store.busyId === cadet.value.id)
+const busy = computed(() => !!cadet.value && (store.busyId === cadet.value.id || resetting.value))
 const editing = ref(false)
 const confirmUnlink = ref(false)
+const resetting = ref(false)
+const resetPassword = ref<string | null>(null)
 
 watch([open, () => props.cadetId], () => {
   editing.value = false
   confirmUnlink.value = false
-  copied.value = false
+  resetPassword.value = null
   store.error = null
-  store.delivery = null
+  store.lastAdded = null
 })
 
-const copied = ref(false)
-const delivery = computed(() => (cadet.value && store.delivery?.cadetId === cadet.value.id ? store.delivery : null))
+const added = computed(() => (cadet.value && store.lastAdded?.cadetId === cadet.value.id ? store.lastAdded : null))
 
-/** Opens the coach's own WhatsApp or mail app with the invite link prefilled. */
-const shareHref = computed(() => {
+async function reset() {
   const c = cadet.value
-  const link = delivery.value?.link
-  if (!c?.guardian || !link) return null
-  const text = `Hello ${c.guardian.name}, please use this link to link your account with ${c.name} on Cricademy: ${link}`
-  if (isEmailContact(c.guardian.contact)) {
-    return `mailto:${c.guardian.contact}?subject=${encodeURIComponent(`Link your account with ${c.name}`)}&body=${encodeURIComponent(text)}`
+  if (!c?.guardianUserId || !academy.activeId) return
+  resetting.value = true
+  store.error = null
+  try {
+    resetPassword.value = await membershipService.resetPassword(academy.activeId, c.guardianUserId)
+  } catch (e) {
+    store.error = e instanceof Error && e.message ? e.message : 'Could not reset the password.'
+  } finally {
+    resetting.value = false
   }
-  return `https://wa.me/${whatsappNumber(c.guardian.contact)}?text=${encodeURIComponent(text)}`
-})
-
-async function copyLink() {
-  if (!delivery.value?.link) return
-  await navigator.clipboard.writeText(delivery.value.link).then(() => (copied.value = true)).catch(() => {})
 }
 
 const showForm = computed(() => cadet.value?.linkStatus === 'unlinked' || editing.value)
@@ -71,17 +57,15 @@ const permissionLabels = computed(() =>
 )
 
 async function send(input: GuardianInviteFormInput) {
-  if (!cadet.value) return
-  await store.sendInvite(cadet.value.id, input).then(() => (editing.value = false)).catch(() => {})
-}
-
-async function resend() {
-  if (cadet.value) await store.resendInvite(cadet.value.id).catch(() => {})
+  if (!cadet.value || !academy.activeId) return
+  resetPassword.value = null
+  await store.addGuardian(academy.activeId, cadet.value.id, input).then(() => (editing.value = false)).catch(() => {})
 }
 
 async function unlink() {
   if (!cadet.value) return
   if (!confirmUnlink.value) return void (confirmUnlink.value = true)
+  resetPassword.value = null
   await store.unlink(cadet.value.id).catch(() => {})
   confirmUnlink.value = false
 }
@@ -114,41 +98,27 @@ async function unlink() {
 
           <p v-if="store.error" role="alert" class="mt-3 rounded-lg bg-cherry-soft px-3 py-2 text-xs text-cherry">{{ store.error }}</p>
 
-          <div
-            v-if="delivery"
-            role="status"
-            :class="cn('mt-3 rounded-lg px-3 py-2.5 text-xs', delivery.status === 'sent' ? 'bg-mint text-turf-700' : 'bg-gold-soft text-clay')"
-          >
-            <p v-if="delivery.status === 'sent'" class="flex items-center gap-1.5 font-semibold">
-              <Check class="size-4" /> Invite sent on WhatsApp to {{ cadet.guardian?.contact }}
+          <div v-if="added" role="status" class="mt-3">
+            <TemporaryPassword v-if="added.member?.temporaryPassword" :username="added.member.username" :password="added.member.temporaryPassword" />
+            <p v-else-if="added.member?.status === 'pending'" class="rounded-lg bg-gold-soft px-3 py-2.5 text-xs text-clay">
+              <span class="font-semibold">{{ added.member.username }}</span> already has an account. They'll see the invitation when they sign in
+              and must accept it before they can see {{ cadet.name }}.
             </p>
-            <p v-else>{{ delivery.reason }}</p>
-            <template v-if="delivery.link">
-              <p class="mt-1.5 truncate font-mono text-[11px] text-ink">{{ delivery.link }}</p>
-              <div class="mt-2 flex gap-2">
-                <button
-                  type="button"
-                  class="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-hairline bg-card py-2 font-semibold text-ink hover:bg-app"
-                  @click="copyLink"
-                >
-                  <Check v-if="copied" class="size-3.5" /><Copy v-else class="size-3.5" /> {{ copied ? 'Copied' : 'Copy link' }}
-                </button>
-                <a
-                  v-if="shareHref && delivery.status === 'manual'"
-                  :href="shareHref"
-                  target="_blank"
-                  rel="noopener"
-                  class="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-turf-900 py-2 font-semibold text-white hover:bg-turf-700"
-                >
-                  <Send class="size-3.5" /> {{ isEmailContact(cadet.guardian?.contact ?? '') ? 'Open email' : 'Open WhatsApp' }}
-                </a>
-              </div>
-            </template>
+            <p v-else-if="added.member" class="rounded-lg bg-mint px-3 py-2.5 text-xs text-turf-700">
+              <span class="font-semibold">{{ added.member.username }}</span> is now linked with {{ cadet.name }}.
+            </p>
+            <p v-else class="rounded-lg bg-gold-soft px-3 py-2.5 text-xs text-clay">Demo mode saves the guardian but cannot create accounts.</p>
           </div>
+          <TemporaryPassword
+            v-if="resetPassword && cadet.guardian?.username"
+            class="mt-3"
+            :username="cadet.guardian.username"
+            :password="resetPassword"
+          />
 
           <div v-if="showForm" class="mt-5">
             <p class="mb-3 text-sm text-ink-muted">
-              {{ editing ? 'Update the details and send a fresh invite.' : 'Invite a parent or guardian to link with this cadet.' }}
+              {{ editing ? 'Update the guardian details.' : 'Add a parent or guardian by username to link with this cadet.' }}
             </p>
             <GuardianInviteForm
               :key="cadet.id"
@@ -167,7 +137,9 @@ async function unlink() {
                     {{ cadet.guardian.name }}
                     <BadgeCheck v-if="cadet.guardian.verified" class="size-4 text-turf" aria-label="Verified" />
                   </p>
-                  <p class="text-xs text-ink-muted">{{ cadet.guardian.relationship }}</p>
+                  <p class="text-xs text-ink-muted">
+                    <span v-if="cadet.guardian.username">@{{ cadet.guardian.username }} · </span>{{ cadet.guardian.relationship }}
+                  </p>
                 </div>
                 <span
                   :class="
@@ -188,29 +160,28 @@ async function unlink() {
               <p class="mt-1.5 flex items-start gap-1.5 text-xs text-ink">
                 <ShieldCheck class="mt-px size-3.5 shrink-0 text-ink-muted" /> {{ permissionLabels.join(' · ') }}
               </p>
-              <p
-                v-if="cadet.linkStatus === 'pending' && expiresIn !== null"
-                :class="cn('mt-1.5 flex items-center gap-1.5 text-xs font-semibold', expiresIn > 0 ? 'text-clay' : 'text-cherry')"
-              >
+              <p v-if="cadet.linkStatus === 'pending'" :class="cn('mt-1.5 flex items-center gap-1.5 text-xs font-semibold', expiresIn === null || expiresIn > 0 ? 'text-clay' : 'text-cherry')">
                 <Clock class="size-3.5" />
-                {{ expiresIn > 0 ? `Invite expires in ${formatDuration(expiresIn)}` : 'Invite expired' }}
+                <template v-if="expiresIn === null">Waiting for them to accept in the app</template>
+                <template v-else>{{ expiresIn > 0 ? `Invite expires in ${formatDuration(expiresIn)}` : 'Invite expired' }}</template>
               </p>
             </div>
 
-            <div v-if="cadet.linkStatus === 'pending'" class="grid grid-cols-2 gap-2">
+            <div class="flex gap-2">
               <button
+                v-if="cadet.linkStatus === 'linked' && cadet.guardian.username && cadet.guardianUserId"
                 type="button"
                 :disabled="busy"
-                class="flex items-center justify-center gap-1.5 rounded-full bg-turf-900 py-3 text-sm font-semibold text-white hover:bg-turf-700 disabled:opacity-60"
-                @click="resend"
+                class="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-hairline py-3 text-sm font-semibold hover:bg-app disabled:opacity-60"
+                @click="reset"
               >
-                <LoaderCircle v-if="busy" class="size-4 animate-spin" />
-                <RotateCw v-else class="size-4" /> Resend
+                <LoaderCircle v-if="resetting" class="size-4 animate-spin" />
+                <KeyRound v-else class="size-4" /> Reset password
               </button>
               <button
                 type="button"
                 :disabled="busy"
-                class="flex items-center justify-center gap-1.5 rounded-full border border-hairline py-3 text-sm font-semibold hover:bg-app"
+                class="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-hairline py-3 text-sm font-semibold hover:bg-app"
                 @click="editing = true"
               >
                 <Pencil class="size-4" /> Edit details

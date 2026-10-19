@@ -6,13 +6,14 @@ import { ChevronRight, LoaderCircle, Share2, ThumbsUp, Target, X } from 'lucide-
 import UiAvatar from '@/components/ui/UiAvatar.vue'
 import { useCadetsStore } from '@/stores/cadets'
 import { usePlayerStatsStore } from '@/stores/playerStats'
-import { ACADEMY } from '@/data/mock'
+import { useAcademyStore } from '@/stores/academy'
 
 const props = defineProps<{ cadetId: string | null; rank?: number }>()
 const open = defineModel<boolean>('open', { required: true })
 
 const cadets = useCadetsStore()
 const stats = usePlayerStatsStore()
+const academy = useAcademyStore()
 const cadet = computed(() => (props.cadetId ? cadets.byId(props.cadetId) : null))
 const telemetry = computed(() => (props.cadetId ? stats.batting[props.cadetId] : undefined))
 const error = computed(() => (props.cadetId ? (stats.errors[props.cadetId] ?? null) : null))
@@ -34,7 +35,7 @@ function summary() {
   const c = cadet.value!
   const t = telemetry.value!
   return [
-    `${ACADEMY.name} scout dossier`,
+    `${academy.active?.academyName ?? 'Cricademy'} scout dossier`,
     `${c.name} (#${c.jersey}) · ${c.ageGroup} ${c.role} · ${c.battingHand}-hand bat${c.bowlingStyle ? ` · ${c.bowlingStyle}` : ''}`,
     props.rank ? `Division rank: #${props.rank} in ${c.ageGroup}` : '',
     `Runs ${t.totalRuns} (${t.runsCohortDelta >= 0 ? '+' : ''}${t.runsCohortDelta}% vs ${c.ageGroup} avg) · Avg ${t.average} · SR ${t.strikeRate} · Boundary ${t.boundaryPct}%`,

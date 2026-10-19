@@ -45,21 +45,21 @@ const toRow = (p: MatchPlanInput) => ({
 
 export function createSupabaseTacticsRepository(client: SupabaseClient): TacticsRepository {
   return {
-    async list(coachId) {
+    async list(academyId) {
       const { data, error } = await client
         .from('match_plans')
         .select('*')
-        .eq('coach_id', coachId)
+        .eq('academy_id', academyId)
         .order('match_date', { ascending: false })
         .order('updated_at', { ascending: false })
         .returns<PlanRow[]>()
       if (error) throw new Error('Could not load match plans.')
       return data.map(fromRow)
     },
-    async create(coachId, input) {
+    async create(academyId, input) {
       const { data, error } = await client
         .from('match_plans')
-        .insert({ ...toRow(input), coach_id: coachId })
+        .insert({ ...toRow(input), academy_id: academyId })
         .select('*')
         .single<PlanRow>()
       if (error) throw new Error('Could not save the match plan.')

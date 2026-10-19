@@ -1,8 +1,10 @@
 import type { AuthError, Session, SupabaseClient } from '@supabase/supabase-js'
 import type { AuthService, AuthSession } from '../types'
+import { loginEmail } from '@/lib/username'
 
 const FRIENDLY_ERRORS: Record<string, string> = {
-  invalid_credentials: 'Invalid email or password',
+  invalid_credentials: 'Invalid username, email or password',
+  same_password: 'Choose a password different from your current one.',
   email_not_confirmed: 'Confirm your email first. Check your inbox for the link we sent.',
   user_already_exists: 'An account with this email already exists. Sign in instead.',
   email_exists: 'An account with this email already exists. Sign in instead.',
@@ -36,10 +38,16 @@ export function createSupabaseAuthService(client: SupabaseClient): AuthService {
       const { data } = client.auth.onAuthStateChange((_event, session) => handler(toSession(session)))
       return () => data.subscription.unsubscribe()
     },
-    async signInWithPassword({ email, password }) {
-      const { data, error } = await client.auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
-      if (error || !data.session) throw friendly(error, 'Invalid email or password')
+    async signInWithPassword({ login, password }) {
+      const { data, error } = await client.auth.signInWithPassword({ email: loginEmail(login), password })
+      if (error || !data.session) throw friendly(error, FRIENDLY_ERRORS.invalid_credentials)
       return toSession(data.session)!
+    },
+    async updatePassword(password) {
+      const { error } = await client.auth.updateUser({ password })
+      if (error) throw friendly(error, 'Could not change your password. Please try again.')
+      const { error: flagError } = await client.rpc('complete_password_change')
+      if (flagError) throw new Error('Your password was changed, but we could not save that. Please try again.')
     },
     async signUp({ email, password }) {
       const { data, error } = await client.auth.signUp({

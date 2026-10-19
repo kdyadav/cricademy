@@ -5,7 +5,7 @@ import { toTypedSchema } from '@vee-validate/zod'
 import { LoaderCircle, Save, Trash2 } from 'lucide-vue-next'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import ChoiceGroup from '@/components/ui/ChoiceGroup.vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAcademyStore } from '@/stores/academy'
 import { useCadetsStore } from '@/stores/cadets'
 import { useOpsStore } from '@/stores/ops'
 import { cadetSchema, type CadetFormInput } from '@/schemas/academy'
@@ -15,7 +15,7 @@ import { cn } from '@/lib/cn'
 const props = defineProps<{ cadetId: string | null }>()
 const open = defineModel<boolean>('open', { required: true })
 
-const auth = useAuthStore()
+const academy = useAcademyStore()
 const store = useCadetsStore()
 const ops = useOpsStore()
 const cadet = computed(() => (props.cadetId ? store.byId(props.cadetId) : null))
@@ -61,7 +61,7 @@ async function attempt(action: () => Promise<unknown>, fallback: string) {
 }
 
 const onSubmit = handleSubmit((input) =>
-  attempt(() => store.save(auth.user!.id, { ...input, bowlingStyle: input.bowlingStyle || undefined }, cadet.value?.id), 'Could not save the cadet.'),
+  attempt(() => store.save(academy.activeId!, { ...input, bowlingStyle: input.bowlingStyle || undefined }, cadet.value?.id), 'Could not save the cadet.'),
 )
 
 function remove() {

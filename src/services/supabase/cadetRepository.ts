@@ -1,15 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { CadetInput, CadetRepository, GuardianInviteResult, InviteDelivery } from '../types'
+import type { AddMemberResult, CadetInput, CadetRepository } from '../types'
 import type { AgeGroup, Cadet, Guardian, LinkStatus, PlayingRole } from '@/types'
-
-const INVITE_TTL_HOURS = 48
-
-const DELIVERY_REASONS: Record<string, string> = {
-  not_a_phone: 'Email invites are not sent automatically yet. Share the link below.',
-  not_configured: 'WhatsApp sending is not set up yet. Share the link below.',
-}
-
-export const inviteLink = (token: string) => `${window.location.origin}${import.meta.env.BASE_URL}invite/${token}`
+import { invoke } from './membershipService'
 
 /** Row shape of `public.cadets` (see supabase/migrations). */
 export interface CadetRow {
@@ -41,6 +33,7 @@ export const cadetFromRow = (r: CadetRow): Cadet => ({
   batchId: r.batch_id ?? '',
   linkStatus: r.link_status,
   guardian: r.guardian ?? undefined,
+  guardianUserId: r.guardian_user_id ?? undefined,
   inviteExpiresAt: r.invite_expires_at ?? undefined,
   feeDue: Number(r.fee_due),
 })
@@ -62,38 +55,23 @@ export function createSupabaseCadetRepository(client: SupabaseClient): CadetRepo
     return cadetFromRow(data)
   }
 
-  /** Mints a single-use token, then asks the Edge Function to deliver it over WhatsApp. */
-  async function issueInvite(cadetId: string, failure: string): Promise<GuardianInviteResult> {
-    const { data, error } = await client
-      .rpc('create_guardian_invite', { p_cadet_id: cadetId, p_ttl_hours: INVITE_TTL_HOURS })
-      .single<{ invite_id: string; token: string; expires_at: string }>()
+  /** Drops the cadet's link to a guardian account, if any. */
+  async function dropGuardianLink(cadetId: string, guardianId: string | null | undefined, failure: string) {
+    if (!guardianId) return
+    const { error } = await client.from('cadet_guardians').delete().eq('cadet_id', cadetId).eq('guardian_id', guardianId)
     if (error) throw new Error(failure)
-    const link = inviteLink(data.token)
-
-    let delivery: InviteDelivery
-    const { data: sent, error: sendError } = await client.functions.invoke<{ status: string; reason?: string }>(
-      'send-guardian-invite',
-      { body: { inviteId: data.invite_id, token: data.token } },
-    )
-    if (sent?.status === 'sent') delivery = { status: 'sent', link }
-    else if (sendError || !sent) delivery = { status: 'manual', link, reason: 'Could not reach the WhatsApp service. Share the link below.' }
-    else delivery = { status: 'manual', link, reason: DELIVERY_REASONS[sent.reason ?? ''] ?? `WhatsApp could not deliver it (${sent.reason ?? 'unknown error'}). Share the link below.` }
-
-    const { data: row, error: readError } = await client.from('cadets').select('*').eq('id', cadetId).single<CadetRow>()
-    if (readError) throw new Error(failure)
-    return { cadet: cadetFromRow(row), delivery }
   }
 
   return {
-    async list(coachId) {
-      const { data, error } = await client.from('cadets').select('*').eq('coach_id', coachId).order('name').returns<CadetRow[]>()
+    async list(academyId) {
+      const { data, error } = await client.from('cadets').select('*').eq('academy_id', academyId).order('name').returns<CadetRow[]>()
       if (error) throw new Error('Could not load the squad.')
       return data.map(cadetFromRow)
     },
-    async create(coachId, input) {
+    async create(academyId, input) {
       const { data, error } = await client
         .from('cadets')
-        .insert({ ...inputToRow(input), coach_id: coachId })
+        .insert({ ...inputToRow(input), academy_id: academyId })
         .select('*')
         .single<CadetRow>()
       if (error) throw new Error('Could not add the cadet.')
@@ -104,21 +82,35 @@ export function createSupabaseCadetRepository(client: SupabaseClient): CadetRepo
       const { error } = await client.from('cadets').delete().eq('id', cadetId)
       if (error) throw new Error('Could not remove the cadet.')
     },
-    async sendGuardianInvite(cadetId, guardian) {
-      await patch(cadetId, { link_status: 'pending', guardian: { ...guardian, verified: false } }, 'Could not send the invite.')
-      return issueInvite(cadetId, 'Could not send the invite.')
+    async addGuardian(academyId, cadetId, guardian) {
+      const failure = 'Could not add the guardian.'
+      const { data: before, error } = await client
+        .from('cadets')
+        .select('guardian_user_id')
+        .eq('id', cadetId)
+        .single<Pick<CadetRow, 'guardian_user_id'>>()
+      if (error) throw new Error(failure)
+      // Sets `guardian_user_id` and `link_status` on the cadet.
+      const member = await invoke<AddMemberResult>(
+        client,
+        'create-member',
+        { academyId, role: 'guardian', username: guardian.username, displayName: guardian.name, cadetId, relationship: guardian.relationship },
+        failure,
+      )
+      if (before.guardian_user_id !== member.userId) await dropGuardianLink(cadetId, before.guardian_user_id, failure)
+      const cadet = await patch(cadetId, { guardian: { ...guardian, verified: member.status === 'active' } }, failure)
+      return { cadet, member }
     },
-    async resendGuardianInvite(cadetId) {
-      const { data, error } = await client.from('cadets').select('link_status').eq('id', cadetId).maybeSingle<Pick<CadetRow, 'link_status'>>()
-      if (error) throw new Error('Could not resend the invite.')
-      if (data?.link_status !== 'pending') throw new Error('There is no pending invite to resend.')
-      return issueInvite(cadetId, 'Could not resend the invite.')
+    async unlinkGuardian(cadetId) {
+      const failure = 'Could not remove the guardian.'
+      const { data, error } = await client
+        .from('cadets')
+        .select('guardian_user_id')
+        .eq('id', cadetId)
+        .single<Pick<CadetRow, 'guardian_user_id'>>()
+      if (error) throw new Error(failure)
+      await dropGuardianLink(cadetId, data.guardian_user_id, failure)
+      return patch(cadetId, { link_status: 'unlinked', guardian: null, invite_expires_at: null, guardian_user_id: null }, failure)
     },
-    unlinkGuardian: (cadetId) =>
-      patch(
-        cadetId,
-        { link_status: 'unlinked', guardian: null, invite_expires_at: null, guardian_user_id: null },
-        'Could not remove the guardian.',
-      ),
   }
 }

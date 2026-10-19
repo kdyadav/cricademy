@@ -41,33 +41,33 @@ export function createSupabaseFeeRepository(client: SupabaseClient): FeeReposito
   }
 
   return {
-    async getSettings(coachId) {
+    async getSettings(academyId) {
       const { data, error } = await client
         .from('fee_settings')
         .select('upi_id, payee_name')
-        .eq('coach_id', coachId)
+        .eq('academy_id', academyId)
         .maybeSingle<{ upi_id: string; payee_name: string }>()
       if (error) throw new Error('Could not load payment settings.')
       return data ? { upiId: data.upi_id, payeeName: data.payee_name } : null
     },
-    async saveSettings(coachId, s) {
-      const { error } = await client.from('fee_settings').upsert({ coach_id: coachId, upi_id: s.upiId, payee_name: s.payeeName })
+    async saveSettings(academyId, s) {
+      const { error } = await client.from('fee_settings').upsert({ academy_id: academyId, upi_id: s.upiId, payee_name: s.payeeName })
       if (error) throw new Error('Could not save payment settings.')
       return { ...s }
     },
-    async list(coachId) {
+    async list(academyId) {
       const { data, error } = await client
         .from('fee_dues')
         .select('*')
-        .eq('coach_id', coachId)
+        .eq('academy_id', academyId)
         .order('due_date', { ascending: false })
         .returns<FeeDueRow[]>()
       if (error) throw new Error('Could not load fees.')
       return data.map(fromRow)
     },
-    async create(coachId, cadetIds, input) {
+    async create(academyId, cadetIds, input) {
       const rows = cadetIds.map((cadetId) => ({
-        coach_id: coachId,
+        academy_id: academyId,
         cadet_id: cadetId,
         title: input.title,
         amount: input.amount,

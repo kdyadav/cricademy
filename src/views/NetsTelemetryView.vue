@@ -7,17 +7,17 @@ import BatchSwitcher from '@/components/ops/BatchSwitcher.vue'
 import DeliveryPad from '@/components/nets/DeliveryPad.vue'
 import SessionScoreboard from '@/components/nets/SessionScoreboard.vue'
 import UiAvatar from '@/components/ui/UiAvatar.vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAcademyStore } from '@/stores/academy'
 import { useNetsStore } from '@/stores/nets'
 import { formatOvers, summarize } from '@/lib/netSession'
 import { cn } from '@/lib/cn'
 
-const auth = useAuthStore()
+const academy = useAcademyStore()
 const nets = useNetsStore()
 const { batches, activeBatchId, roster, strikerId, striker, drafts, deliveries, sessions, loading, saving, error } = storeToRefs(nets)
 
 watch(
-  () => auth.user?.id,
+  () => academy.activeId,
   (id) => id && nets.init(id),
   { immediate: true },
 )

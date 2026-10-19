@@ -7,7 +7,6 @@ import { LoaderCircle, MailCheck } from 'lucide-vue-next'
 import AcademyCrest from '@/components/layout/AcademyCrest.vue'
 import { useAuthStore } from '@/stores/auth'
 import { signUpSchema } from '@/schemas/auth'
-import { ACADEMY } from '@/data/mock'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -43,8 +42,8 @@ const onSubmit = handleSubmit(async ({ email, password }) => {
     <div class="flex flex-1 flex-col justify-center px-6 py-10">
       <div class="mb-8 flex flex-col items-center text-center">
         <AcademyCrest class="mb-4 scale-125" />
-        <h1 class="font-serif text-2xl font-semibold">{{ ACADEMY.name }}</h1>
-        <p class="mt-1 text-sm text-ink-muted">Create your coach account</p>
+        <h1 class="font-serif text-2xl font-semibold">Cricademy</h1>
+        <p class="mt-1 text-sm text-ink-muted">Create an account and set up your academy</p>
       </div>
 
       <div v-if="pendingEmail" role="status" class="rounded-xl border border-hairline bg-app p-5 text-center">

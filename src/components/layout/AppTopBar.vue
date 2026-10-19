@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { PopoverRoot, PopoverTrigger, PopoverPortal, PopoverContent } from 'reka-ui'
-import { Bell, CheckCheck } from 'lucide-vue-next'
+import { Bell, CheckCheck, ChevronDown } from 'lucide-vue-next'
 import AcademyCrest from './AcademyCrest.vue'
 import UiAvatar from '@/components/ui/UiAvatar.vue'
 import { useCoachStore } from '@/stores/coach'
-import { ACADEMY } from '@/data/mock'
+import { useAcademyStore } from '@/stores/academy'
 import { cn } from '@/lib/cn'
 
 const coach = useCoachStore()
+const academy = useAcademyStore()
 const { profile, notifications, unreadCount, coachModeActive } = storeToRefs(coach)
 
 const toneDot = { info: 'bg-turf-600', alert: 'bg-cherry', success: 'bg-gold' } as const
@@ -20,7 +21,15 @@ const toneDot = { info: 'bg-turf-600', alert: 'bg-cherry', success: 'bg-gold' } 
       <AcademyCrest />
 
       <div class="min-w-0 flex-1">
-        <p class="truncate font-serif text-[17px] leading-tight font-semibold tracking-tight">{{ ACADEMY.name }}</p>
+        <RouterLink
+          :to="{ name: 'academies' }"
+          class="flex max-w-full items-center gap-1 rounded focus-visible:ring-2 focus-visible:ring-turf focus-visible:outline-none"
+          aria-label="Switch academy"
+        >
+          <span class="truncate font-serif text-[17px] leading-tight font-semibold tracking-tight">{{ academy.active?.academyName }}</span>
+          <ChevronDown class="size-4 shrink-0 text-ink-muted" />
+          <span v-if="academy.pending.length" class="size-2 shrink-0 rounded-full bg-cherry" aria-label="New invitation" />
+        </RouterLink>
         <button
           class="mt-0.5 inline-flex items-center gap-1.5 text-[11px] font-medium text-ink-muted"
           @click="coachModeActive = !coachModeActive"

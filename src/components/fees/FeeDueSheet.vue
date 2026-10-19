@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { BadgeCheck, Check, Copy, LoaderCircle, Mail, MessageCircle, RotateCcw, Trash2 } from 'lucide-vue-next'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import ChoiceGroup from '@/components/ui/ChoiceGroup.vue'
+import { useAcademyStore } from '@/stores/academy'
 import { useCadetsStore } from '@/stores/cadets'
 import { useFeesStore } from '@/stores/fees'
 import { isEmailContact } from '@/schemas/guardian'
@@ -14,6 +15,7 @@ const props = defineProps<{ dueId: string | null }>()
 const open = defineModel<boolean>('open', { required: true })
 const emit = defineEmits<{ setup: [] }>()
 
+const academy = useAcademyStore()
 const fees = useFeesStore()
 const cadets = useCadetsStore()
 const due = computed(() => (props.dueId ? fees.byId(props.dueId) : null))
@@ -67,7 +69,7 @@ const recordPayment = () =>
 const confirmReported = () =>
   attempt(() => fees.markPaid(due.value!.id, { method: 'upi', reference: due.value!.reportedReference }), 'Could not record the payment.')
 const setStatus = (status: 'due' | 'waived') => attempt(() => fees.setStatus(due.value!.id, status), 'Could not update the fee.')
-const reminded = () => fees.markReminded(due.value!.id).catch(() => {})
+const reminded = () => academy.isOwner && fees.markReminded(due.value!.id).catch(() => {})
 
 async function copyLink() {
   await navigator.clipboard.writeText(link.value).then(() => (copied.value = true)).catch(() => {})
@@ -110,8 +112,10 @@ function remove() {
       <template v-if="due.status === 'due'">
         <div v-if="due.reportedReference" role="status" class="mt-3 rounded-lg bg-gold-soft px-3 py-2.5 text-xs text-clay">
           <p class="font-semibold">Parent says they paid · UTR {{ due.reportedReference }}</p>
-          <p class="mt-0.5">Find this UTR in your PhonePe or bank app before confirming.</p>
+          <p v-if="academy.isOwner" class="mt-0.5">Find this UTR in your PhonePe or bank app before confirming.</p>
+          <p v-else class="mt-0.5">The academy owner will confirm it.</p>
           <button
+            v-if="academy.isOwner"
             type="button"
             :disabled="busy"
             class="mt-2 flex w-full items-center justify-center gap-1.5 rounded-full bg-turf-900 py-2 font-semibold text-white hover:bg-turf-700 disabled:opacity-60"
@@ -124,8 +128,11 @@ function remove() {
         <section class="mt-4">
           <h3 class="mb-1.5 text-xs font-semibold text-ink-muted">Ask for payment</h3>
           <p v-if="!fees.settings" class="rounded-lg bg-app px-3 py-2 text-xs text-ink-muted">
-            <button type="button" class="font-semibold text-turf hover:underline" @click="emit('setup')">Add your UPI ID</button>
-            so parents can pay with PhonePe.
+            <template v-if="academy.isOwner">
+              <button type="button" class="font-semibold text-turf hover:underline" @click="emit('setup')">Add your UPI ID</button>
+              so parents can pay with PhonePe.
+            </template>
+            <template v-else>The academy owner has not added a UPI ID yet.</template>
           </p>
           <div v-else class="flex gap-2">
             <button type="button" class="flex flex-1 items-center justify-center gap-1.5 rounded-full border border-hairline py-2 text-xs font-semibold hover:bg-app" @click="copyLink">
@@ -146,7 +153,7 @@ function remove() {
           <p v-if="due.remindedAt" class="mt-1.5 text-[11px] text-ink-muted">Last reminded {{ new Date(due.remindedAt).toLocaleDateString('en-IN') }}</p>
         </section>
 
-        <section class="mt-4 space-y-2.5">
+        <section v-if="academy.isOwner" class="mt-4 space-y-2.5">
           <ChoiceGroup v-model="method" legend="Record payment" :options="Object.keys(METHODS) as (keyof typeof METHODS)[]" />
           <input v-model="reference" class="field-input py-2.5 text-sm" maxlength="60" :placeholder="method === 'UPI' ? 'UTR / transaction ID (optional)' : 'Receipt or note (optional)'" />
           <button
@@ -160,7 +167,7 @@ function remove() {
         </section>
       </template>
 
-      <div class="mt-3 flex gap-2">
+      <div v-if="academy.isOwner" class="mt-3 flex gap-2">
         <button
           type="button"
           :disabled="busy"

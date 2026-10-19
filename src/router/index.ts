@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MobileAppLayout from '@/components/layout/MobileAppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useAcademyStore } from '@/stores/academy'
 import { useCoachStore } from '@/stores/coach'
 
 const router = createRouter({
@@ -39,6 +40,30 @@ const router = createRouter({
       meta: { title: 'Profile unavailable' },
     },
     {
+      path: '/change-password',
+      name: 'change-password',
+      component: () => import('@/views/ChangePasswordView.vue'),
+      meta: { title: 'Change password' },
+    },
+    {
+      path: '/academies',
+      name: 'academies',
+      component: () => import('@/views/AcademiesView.vue'),
+      meta: { title: 'Academies' },
+    },
+    {
+      path: '/members',
+      name: 'members',
+      component: () => import('@/views/MembersView.vue'),
+      meta: { title: 'Members' },
+    },
+    {
+      path: '/home',
+      name: 'guardian-home',
+      component: () => import('@/views/GuardianHomeView.vue'),
+      meta: { title: 'Home' },
+    },
+    {
       path: '/onboarding',
       name: 'onboarding',
       component: () => import('@/views/CoachOnboardingView.vue'),
@@ -74,21 +99,40 @@ router.beforeEach(async (to) => {
   // Guardians open invite links signed out or with an account that has no coach profile.
   if (to.meta.guardian) return true
   const coach = useCoachStore()
+  const academy = useAcademyStore()
 
   if (!auth.user) {
     coach.reset()
+    academy.reset()
     if (to.meta.public) return true
     return { name: 'login', query: to.fullPath !== '/' ? { redirect: to.fullPath } : undefined }
   }
 
   if (to.name === 'login' || to.name === 'signup') return { path: '/ops' }
   if (to.name === 'profile-unavailable') return true
+  const unavailable = { name: 'profile-unavailable', query: { redirect: to.fullPath } }
+  try {
+    await academy.load(auth.user.id)
+  } catch {
+    return unavailable
+  }
+
+  if (academy.mustChangePassword) return to.name === 'change-password' || { name: 'change-password' }
+  if (to.name === 'change-password' || to.name === 'academies') return true
+  if (!academy.active && academy.pending.length) return { name: 'academies' }
+
+  if (academy.isGuardian) return to.name === 'guardian-home' || { name: 'guardian-home' }
+  if (to.name === 'guardian-home') return { path: '/ops' }
+
   try {
     await coach.load(auth.user.id)
   } catch {
-    return { name: 'profile-unavailable', query: { redirect: to.fullPath } }
+    return unavailable
   }
-  if (!coach.hasProfile && to.name !== 'onboarding') return { name: 'onboarding' }
+  // A first coach profile also creates the user's own academy, so onboarding comes before having one.
+  if (!coach.hasProfile) return to.name === 'onboarding' || { name: 'onboarding' }
+  if (!academy.active) return { name: 'academies' }
+  if (to.name === 'members' && !academy.isOwner) return { path: '/ops' }
   return true
 })
 

@@ -4,14 +4,13 @@ import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { LoaderCircle, Save } from 'lucide-vue-next'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAcademyStore } from '@/stores/academy'
 import { useFeesStore } from '@/stores/fees'
 import { feeSettingsSchema, type FeeSettingsFormInput } from '@/schemas/fees'
-import { ACADEMY } from '@/data/mock'
 
 const open = defineModel<boolean>('open', { required: true })
 
-const auth = useAuthStore()
+const academy = useAcademyStore()
 const fees = useFeesStore()
 const busy = ref(false)
 const failure = ref<string | null>(null)
@@ -24,14 +23,14 @@ const err = (k: keyof FeeSettingsFormInput) => (submitCount.value > 0 ? errors.v
 watch(open, (isOpen) => {
   if (!isOpen) return
   failure.value = null
-  resetForm({ values: { upiId: fees.settings?.upiId ?? '', payeeName: fees.settings?.payeeName ?? ACADEMY.name } })
+  resetForm({ values: { upiId: fees.settings?.upiId ?? '', payeeName: fees.settings?.payeeName ?? academy.active?.academyName ?? '' } })
 })
 
 const onSubmit = handleSubmit(async (input) => {
   busy.value = true
   failure.value = null
   try {
-    await fees.saveSettings(auth.user!.id, input)
+    await fees.saveSettings(academy.activeId!, input)
     open.value = false
   } catch (e) {
     failure.value = e instanceof Error && e.message ? e.message : 'Could not save payment settings.'

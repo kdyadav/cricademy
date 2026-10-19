@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { AttendanceRepository, AttendanceSheet, NetBatchInput } from '../types'
-import type { AgeGroup, AttendanceRecord, NetBatch } from '@/types'
+import type { AgeGroup, AttendanceRecord, AttendanceStatus, NetBatch } from '@/types'
 import { cadetFromRow, type CadetRow } from './cadetRepository'
 
 /** Row shape of `public.net_batches`. */
@@ -20,6 +20,15 @@ interface SheetRow {
   date: string
   records: AttendanceRecord[]
   submitted_at: string | null
+}
+
+/** Row returned by `public.get_cadet_attendance`. */
+interface CadetAttendanceRow {
+  date: string
+  batch_id: string
+  status: AttendanceStatus
+  late_minutes: number | null
+  note: string | null
 }
 
 const batchFromRow = (r: BatchRow): NetBatch => ({
@@ -50,20 +59,20 @@ const sheetFromRow = (r: SheetRow): AttendanceSheet => ({
 
 export function createSupabaseAttendanceRepository(client: SupabaseClient): AttendanceRepository {
   return {
-    async listBatches(coachId) {
+    async listBatches(academyId) {
       const { data, error } = await client
         .from('net_batches')
         .select('*')
-        .eq('coach_id', coachId)
+        .eq('academy_id', academyId)
         .order('start_time')
         .returns<BatchRow[]>()
       if (error) throw new Error('Could not load net batches.')
       return data.map(batchFromRow)
     },
-    async createBatch(coachId, input) {
+    async createBatch(academyId, input) {
       const { data, error } = await client
         .from('net_batches')
-        .insert({ ...batchToRow(input), coach_id: coachId })
+        .insert({ ...batchToRow(input), academy_id: academyId })
         .select('*')
         .single<BatchRow>()
       if (error) throw new Error('Could not add the batch.')
@@ -109,6 +118,17 @@ export function createSupabaseAttendanceRepository(client: SupabaseClient): Atte
         .single<SheetRow>()
       if (error) throw new Error('Could not save the register.')
       return sheetFromRow(data)
+    },
+    async listCadetAttendance(cadetId, limit = 30) {
+      const { data, error } = await client.rpc('get_cadet_attendance', { p_cadet_id: cadetId, p_limit: limit })
+      if (error) throw new Error('Could not load attendance.')
+      return ((data ?? []) as CadetAttendanceRow[]).map((r) => ({
+        date: r.date,
+        batchId: r.batch_id,
+        status: r.status,
+        lateMinutes: r.late_minutes ?? undefined,
+        note: r.note ?? undefined,
+      }))
     },
   }
 }

@@ -17,18 +17,21 @@ export const useNetsStore = defineStore('nets', () => {
   const loading = ref(false)
   const saving = ref(false)
   const error = ref<string | null>(null)
-  let loadedForCoach: string | null = null
+  let loadedForAcademy: string | null = null
 
   const striker = computed(() => roster.value.find((c) => c.id === strikerId.value) ?? null)
   const deliveries = computed(() => (strikerId.value ? (drafts.value[strikerId.value] ?? []) : []))
 
-  async function init(coachId: string) {
-    if (loadedForCoach === coachId) return
+  async function init(academyId: string) {
+    if (loadedForAcademy === academyId) return
+    batches.value = []
+    roster.value = []
+    sessions.value = []
     loading.value = true
     error.value = null
     try {
-      batches.value = await attendanceRepository.listBatches(coachId)
-      loadedForCoach = coachId
+      batches.value = await attendanceRepository.listBatches(academyId)
+      loadedForAcademy = academyId
       const keep = batches.value.find((b) => b.id === activeBatchId.value)
       await selectBatch(keep?.id ?? batches.value[0]?.id ?? null)
     } catch {
@@ -103,7 +106,7 @@ export const useNetsStore = defineStore('nets', () => {
 
   /** Forces the next `init` to reload batches and the roster (unsaved balls are kept). */
   function invalidate() {
-    loadedForCoach = null
+    loadedForAcademy = null
   }
 
   return {

@@ -1,4 +1,4 @@
-import type { AttendanceRepository, AttendanceSheet } from '../types'
+import type { AttendanceRepository, AttendanceSheet, CadetAttendanceEntry } from '../types'
 import type { NetBatch } from '@/types'
 import { mockBatches } from '@/data/mock'
 import { newId } from '@/lib/id'
@@ -41,7 +41,7 @@ export function createMockAttendanceRepository(): AttendanceRepository {
       await latency()
       return readBatches().sort(byStart)
     },
-    async createBatch(_coachId, input) {
+    async createBatch(_academyId, input) {
       await latency()
       const batch: NetBatch = { ...input, id: newId() }
       writeBatches([...readBatches(), batch])
@@ -77,6 +77,15 @@ export function createMockAttendanceRepository(): AttendanceRepository {
       all[keyOf(sheet.batchId, sheet.date)] = sheet
       localStorage.setItem(STORAGE_KEY, JSON.stringify(all))
       return structuredClone(sheet)
+    },
+    async listCadetAttendance(cadetId, limit = 30) {
+      await latency()
+      const entries: CadetAttendanceEntry[] = []
+      for (const s of Object.values(readAll())) {
+        const r = s.submittedAt ? s.records.find((x) => x.cadetId === cadetId) : undefined
+        if (r) entries.push({ date: s.date, batchId: s.batchId, status: r.status, lateMinutes: r.lateMinutes, note: r.note })
+      }
+      return entries.sort((a, b) => b.date.localeCompare(a.date)).slice(0, limit)
     },
   }
 }

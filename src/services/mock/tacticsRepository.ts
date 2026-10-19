@@ -26,7 +26,7 @@ export function createMockTacticsRepository(): TacticsRepository {
       await latency()
       return readPlans().sort(newestFirst)
     },
-    async create(_coachId, input) {
+    async create(_academyId, input) {
       await latency()
       const plan: MatchPlan = { ...structuredClone(input), id: newId(), updatedAt: new Date().toISOString() }
       writePlans([...readPlans(), plan])

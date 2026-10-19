@@ -6,21 +6,21 @@ import BatchSwitcher from '@/components/ops/BatchSwitcher.vue'
 import BatchFormSheet from '@/components/ops/BatchFormSheet.vue'
 import AttendanceSummary from '@/components/ops/AttendanceSummary.vue'
 import CadetAttendanceRow from '@/components/ops/CadetAttendanceRow.vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAcademyStore } from '@/stores/academy'
 import { useCoachStore } from '@/stores/coach'
 import { useOpsStore } from '@/stores/ops'
 import { ATTENDANCE_STATUS_OPTIONS } from '@/data/options'
 import type { AttendanceStatus, NetBatch } from '@/types'
 import { cn } from '@/lib/cn'
 
-const auth = useAuthStore()
+const academy = useAcademyStore()
 const coach = useCoachStore()
 const ops = useOpsStore()
 const { batches, activeBatchId, activeBatch, cadets, records, counts, markedCount, submittedAt, locked, loading, error } =
   storeToRefs(ops)
 
 watch(
-  () => auth.user?.id,
+  () => academy.activeId,
   (id) => id && ops.init(id),
   { immediate: true },
 )
@@ -81,12 +81,13 @@ const importError = ref<string | null>(null)
 /** Turns the schedules entered during onboarding into net batches. */
 async function importSchedules() {
   const profile = coach.profile
-  if (!profile || !auth.user) return
+  const academyId = academy.activeId
+  if (!profile || !academyId) return
   importing.value = true
   importError.value = null
   try {
     for (const s of profile.schedules) {
-      await ops.saveBatch(auth.user.id, { label: s.label, ageGroup: 'U-16', focus: 'General nets', start: s.start, end: s.end, pitch: profile.pitch })
+      await ops.saveBatch(academyId, { label: s.label, ageGroup: 'U-16', focus: 'General nets', start: s.start, end: s.end, pitch: profile.pitch })
     }
   } catch (e) {
     importError.value = e instanceof Error ? e.message : 'Could not import your batches.'
@@ -117,6 +118,7 @@ async function importSchedules() {
               <Settings2 class="size-3.5" /> Edit
             </button>
             <button
+              v-if="academy.isOwner"
               type="button"
               class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-turf hover:bg-mint"
               @click="openBatchSheet(null)"
@@ -196,10 +198,11 @@ async function importSchedules() {
       <p v-if="error" role="alert" class="text-sm text-cherry">{{ error }}</p>
       <template v-else>
         <p class="font-serif text-lg font-semibold">No net batches yet</p>
-        <p class="text-xs text-ink-muted">Add a batch to start taking the register and logging nets.</p>
+        <p v-if="academy.isOwner" class="text-xs text-ink-muted">Add a batch to start taking the register and logging nets.</p>
+        <p v-else class="text-xs text-ink-muted">Ask the academy owner to assign you to a batch.</p>
       </template>
       <p v-if="importError" role="alert" class="text-xs text-cherry">{{ importError }}</p>
-      <div class="flex flex-col gap-2 pt-1">
+      <div v-if="academy.isOwner" class="flex flex-col gap-2 pt-1">
         <button
           v-if="coach.profile?.schedules.length"
           type="button"

@@ -7,6 +7,7 @@ import { RadioGroupIndicator, RadioGroupItem, RadioGroupRoot, ToggleGroupItem, T
 import { Award, Camera, Check, ChevronLeft, Clock, LoaderCircle, LogOut, MapPin, Plus, Target, Trash2, UserRound } from 'lucide-vue-next'
 import UiAvatar from '@/components/ui/UiAvatar.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useAcademyStore } from '@/stores/academy'
 import { useCoachStore } from '@/stores/coach'
 import { coachProfileSchema, type BatchScheduleInput } from '@/schemas/coach'
 import { ACCREDITATION_OPTIONS, DISCIPLINE_OPTIONS } from '@/data/options'
@@ -17,6 +18,7 @@ import { newId } from '@/lib/id'
 const router = useRouter()
 const auth = useAuthStore()
 const coach = useCoachStore()
+const academy = useAcademyStore()
 const existing = coach.profile
 const isNew = existing === null
 
@@ -99,8 +101,10 @@ const onSubmit = handleSubmit(async (input) => {
   saveError.value = null
   try {
     await coach.saveProfile(input, avatarFile.value)
-    if (isNew) router.replace('/ops')
-    else leave()
+    if (isNew) {
+      await academy.load(auth.user!.id, true)
+      router.replace('/ops')
+    } else leave()
   } catch {
     saveError.value = 'Could not save your profile. Please try again.'
   }

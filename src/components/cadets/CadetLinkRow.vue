@@ -39,7 +39,8 @@ const expiresIn = computed(() =>
             :class="cn('inline-flex items-center gap-0.5 rounded px-1', expiresIn !== null && expiresIn <= 0 ? 'bg-cherry-soft text-cherry' : 'bg-gold-soft text-clay')"
           >
             <Clock class="size-3" />
-            {{ expiresIn !== null && expiresIn <= 0 ? 'Invite expired' : `Invite · ${formatDuration(expiresIn ?? 0)} left` }}
+            <template v-if="expiresIn === null">Waiting to accept</template>
+            <template v-else>{{ expiresIn <= 0 ? 'Invite expired' : `Invite · ${formatDuration(expiresIn)} left` }}</template>
           </span>
           <span v-else class="inline-flex items-center gap-0.5 rounded bg-app px-1 text-ink-muted"><Link2Off class="size-3" /> No guardian</span>
           <span v-if="cadet.feeDue" class="inline-flex items-center gap-0.5 rounded bg-cherry-soft px-1 text-cherry">
@@ -51,7 +52,7 @@ const expiresIn = computed(() =>
 
     <button
       type="button"
-      :aria-label="cadet.linkStatus === 'unlinked' ? `Invite guardian for ${cadet.name}` : `Manage guardian for ${cadet.name}`"
+      :aria-label="cadet.linkStatus === 'unlinked' ? `Add guardian for ${cadet.name}` : `Manage guardian for ${cadet.name}`"
       :class="
         cn(
           'inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition focus-visible:ring-2 focus-visible:ring-turf focus-visible:outline-none',
@@ -60,7 +61,7 @@ const expiresIn = computed(() =>
       "
       @click="emit('manage')"
     >
-      <template v-if="cadet.linkStatus === 'unlinked'"><UserPlus class="size-3.5" /> Invite</template>
+      <template v-if="cadet.linkStatus === 'unlinked'"><UserPlus class="size-3.5" /> Add</template>
       <template v-else>Guardian <ChevronRight class="size-3.5" /></template>
     </button>
   </li>

@@ -1,13 +1,9 @@
-import type { CadetRepository, InviteDelivery } from '../types'
+import type { CadetRepository } from '../types'
 import type { Cadet } from '@/types'
 import { newId } from '@/lib/id'
 import { removeCadetDues } from './feeRepository'
 import { readCadets, writeCadets } from './cadetStore'
 import { readSessions, writeSessions } from './telemetryRepository'
-
-const INVITE_TTL_MS = 48 * 3_600_000
-
-const DEMO_DELIVERY: InviteDelivery = { status: 'manual', link: null, reason: 'Demo mode saves the invite but cannot send messages.' }
 
 const latency = (ms = 300) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -29,7 +25,7 @@ export function createMockCadetRepository(): CadetRepository {
       await latency()
       return readCadets()
     },
-    async create(_coachId, input) {
+    async create(_academyId, input) {
       await latency()
       const cadet: Cadet = { ...structuredClone(input), id: newId(), linkStatus: 'unlinked', feeDue: 0 }
       writeCadets([...readCadets(), cadet])
@@ -45,23 +41,14 @@ export function createMockCadetRepository(): CadetRepository {
       writeSessions(readSessions().filter((s) => s.cadetId !== cadetId))
       removeCadetDues(cadetId)
     },
-    async sendGuardianInvite(cadetId, guardian) {
+    async addGuardian(_academyId, cadetId, guardian) {
       await latency(500)
-      const cadet = mutate(cadetId, (c) => ({
+      const cadet = mutate(cadetId, ({ inviteExpiresAt: _e, ...c }) => ({
         ...c,
         linkStatus: 'pending',
         guardian: { ...guardian, verified: false },
-        inviteExpiresAt: new Date(Date.now() + INVITE_TTL_MS).toISOString(),
       }))
-      return { cadet, delivery: DEMO_DELIVERY }
-    },
-    async resendGuardianInvite(cadetId) {
-      await latency(500)
-      const cadet = mutate(cadetId, (c) => {
-        if (c.linkStatus !== 'pending') throw new Error('There is no pending invite to resend.')
-        return { ...c, inviteExpiresAt: new Date(Date.now() + INVITE_TTL_MS).toISOString() }
-      })
-      return { cadet, delivery: DEMO_DELIVERY }
+      return { cadet, member: null }
     },
     async unlinkGuardian(cadetId) {
       await latency()

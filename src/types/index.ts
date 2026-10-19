@@ -30,6 +30,8 @@ export interface Guardian {
   relationship: GuardianRelationship
   permissions: GuardianPermission[]
   verified: boolean
+  /** Login username of the guardian's account; missing for guardians invited by link. */
+  username?: string
 }
 
 export type LinkStatus = 'linked' | 'pending' | 'unlinked'
@@ -46,6 +48,8 @@ export interface Cadet {
   batchId: string
   linkStatus: LinkStatus
   guardian?: Guardian
+  /** Account id of the linked or invited guardian */
+  guardianUserId?: string
   /** ISO timestamp of when a pending invite expires */
   inviteExpiresAt?: string
   /** Sum of the cadet's open fee dues */

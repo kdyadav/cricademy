@@ -59,7 +59,7 @@ export function createMockFeeRepository(): FeeRepository {
       await latency()
       return read<FeeSettings | null>(SETTINGS_KEY, null)
     },
-    async saveSettings(_coachId, settings) {
+    async saveSettings(_academyId, settings) {
       await latency()
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
       return { ...settings }
@@ -68,7 +68,7 @@ export function createMockFeeRepository(): FeeRepository {
       await latency()
       return readDues().sort((a, b) => b.dueDate.localeCompare(a.dueDate))
     },
-    async create(_coachId, cadetIds, input) {
+    async create(_academyId, cadetIds, input) {
       await latency()
       const created = cadetIds.map((cadetId): FeeDue => ({ id: newId(), cadetId, ...input, status: 'due' }))
       writeDues([...readDues(), ...created])

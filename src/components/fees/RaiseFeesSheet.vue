@@ -4,7 +4,7 @@ import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import { LoaderCircle, ReceiptIndianRupee } from 'lucide-vue-next'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAcademyStore } from '@/stores/academy'
 import { useCadetsStore } from '@/stores/cadets'
 import { useFeesStore } from '@/stores/fees'
 import { localDate, useOpsStore } from '@/stores/ops'
@@ -13,7 +13,7 @@ import { formatInr } from '@/lib/fees'
 
 const open = defineModel<boolean>('open', { required: true })
 
-const auth = useAuthStore()
+const academy = useAcademyStore()
 const cadets = useCadetsStore()
 const ops = useOpsStore()
 const fees = useFeesStore()
@@ -51,7 +51,7 @@ const onSubmit = handleSubmit(async ({ title, amount, dueDate }) => {
   busy.value = true
   failure.value = null
   try {
-    await fees.raise(auth.user!.id, payers.value.map((c) => c.id), { title, amount, dueDate })
+    await fees.raise(academy.activeId!, payers.value.map((c) => c.id), { title, amount, dueDate })
     open.value = false
   } catch (e) {
     failure.value = e instanceof Error && e.message ? e.message : 'Could not raise the fees.'

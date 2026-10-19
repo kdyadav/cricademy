@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { authService, type AuthSession, type PasswordCredentials } from '@/services'
+import { authService, type AuthSession, type PasswordCredentials, type SignInCredentials } from '@/services'
 
 export const useAuthStore = defineStore('auth', () => {
   const session = ref<AuthSession | null>(null)
@@ -22,9 +22,11 @@ export const useAuthStore = defineStore('auth', () => {
     return initPromise
   }
 
-  async function signIn(credentials: PasswordCredentials) {
+  async function signIn(credentials: SignInCredentials) {
     session.value = await authService.signInWithPassword(credentials)
   }
+
+  const updatePassword = (password: string) => authService.updatePassword(password)
 
   /** Returns `true` when the account is active now, `false` when it awaits email confirmation. */
   async function signUp(credentials: PasswordCredentials) {
@@ -41,5 +43,5 @@ export const useAuthStore = defineStore('auth', () => {
     session.value = null
   }
 
-  return { session, ready, user, isAuthenticated, init, signIn, signUp, sendMagicLink, signOut }
+  return { session, ready, user, isAuthenticated, init, signIn, updatePassword, signUp, sendMagicLink, signOut }
 })

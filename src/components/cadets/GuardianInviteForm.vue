@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { watch } from 'vue'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
-import { Check, LoaderCircle, Mail, MessageCircle } from 'lucide-vue-next'
+import { Check, LoaderCircle, UserPlus } from 'lucide-vue-next'
 import type { Guardian, GuardianPermission } from '@/types'
-import { guardianInviteSchema, isEmailContact, type GuardianInviteFormInput } from '@/schemas/guardian'
+import { guardianInviteSchema, type GuardianInviteFormInput } from '@/schemas/guardian'
 import { PERMISSION_OPTIONS, RELATIONSHIP_OPTIONS } from '@/data/options'
 import { cn } from '@/lib/cn'
 
@@ -15,6 +15,7 @@ const { handleSubmit, defineField, errors, values, submitCount, validate } = use
   validationSchema: toTypedSchema(guardianInviteSchema),
   initialValues: {
     name: props.initial?.name ?? '',
+    username: props.initial?.username ?? '',
     contact: props.initial?.contact ?? '',
     relationship: props.initial?.relationship,
     permissions: props.initial ? [...props.initial.permissions] : ['fee_payer', 'attendance_signoff'],
@@ -23,14 +24,13 @@ const { handleSubmit, defineField, errors, values, submitCount, validate } = use
 
 const fieldOpts = { validateOnModelUpdate: false, validateOnBlur: false }
 const [name] = defineField('name', fieldOpts)
+const [username] = defineField('username', fieldOpts)
 const [contact] = defineField('contact', fieldOpts)
 const [relationship] = defineField('relationship', fieldOpts)
 const [permissions] = defineField('permissions', fieldOpts)
 
 watch(values, () => submitCount.value > 0 && validate(), { deep: true })
 const err = (path: keyof GuardianInviteFormInput) => (submitCount.value > 0 ? errors.value[path] : undefined)
-
-const viaEmail = computed(() => isEmailContact(contact.value ?? ''))
 
 // "View only" is exclusive: picking it clears the others, and vice versa.
 function togglePermission(p: GuardianPermission) {
@@ -52,7 +52,23 @@ const onSubmit = handleSubmit((input) => emit('submit', input))
     </div>
 
     <div>
-      <label for="g-contact" class="mb-1 block text-xs font-semibold text-ink-muted">Mobile number or email</label>
+      <label for="g-username" class="mb-1 block text-xs font-semibold text-ink-muted">Username</label>
+      <input
+        id="g-username"
+        v-model="username"
+        class="field-input"
+        autocapitalize="none"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="e.g. sunita.sharma"
+        :aria-invalid="!!err('username')"
+      />
+      <p v-if="err('username')" class="mt-1 text-xs text-cherry">{{ err('username') }}</p>
+      <p v-else class="mt-1 text-[11px] text-ink-muted">A new username gets an account straight away. An existing user must accept first.</p>
+    </div>
+
+    <div>
+      <label for="g-contact" class="mb-1 block text-xs font-semibold text-ink-muted">Mobile number or email (for fee reminders)</label>
       <input
         id="g-contact"
         v-model="contact"
@@ -132,9 +148,8 @@ const onSubmit = handleSubmit((input) => emit('submit', input))
         class="flex flex-1 items-center justify-center gap-2 rounded-full bg-turf-900 py-3 text-sm font-semibold text-white transition hover:bg-turf-700 disabled:opacity-60"
       >
         <LoaderCircle v-if="submitting" class="size-4 animate-spin" />
-        <Mail v-else-if="viaEmail" class="size-4" />
-        <MessageCircle v-else class="size-4" />
-        Send invite via {{ viaEmail ? 'email' : 'WhatsApp' }}
+        <UserPlus v-else class="size-4" />
+        {{ initial ? 'Save guardian' : 'Add guardian' }}
       </button>
     </div>
   </form>

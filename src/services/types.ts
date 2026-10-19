@@ -34,12 +34,20 @@ export interface PasswordCredentials {
   password: string
 }
 
+/** `login` is an email address or a username created by academy staff. */
+export interface SignInCredentials {
+  login: string
+  password: string
+}
+
 export interface AuthService {
   getSession(): Promise<AuthSession | null>
   /** Returns an unsubscribe function. */
   onAuthStateChange(handler: AuthChangeHandler): () => void
   /** Rejects with an Error whose message is safe to show to the user. */
-  signInWithPassword(credentials: PasswordCredentials): Promise<AuthSession>
+  signInWithPassword(credentials: SignInCredentials): Promise<AuthSession>
+  /** Sets the signed-in user's password and clears the forced-change flag. Rejects with a message safe to show. */
+  updatePassword(password: string): Promise<void>
   /**
    * Resolves with the new session, or `null` when the account must confirm its email first.
    * Rejects with an Error whose message is safe to show to the user.
@@ -54,6 +62,75 @@ export interface AuthService {
 export interface CoachRepository {
   getByUserId(userId: string): Promise<CoachProfile | null>
   upsert(profile: CoachProfile): Promise<CoachProfile>
+}
+
+export type AcademyRole = 'owner' | 'coach' | 'guardian'
+
+/** `pending` until the user accepts being added to the academy. */
+export interface Membership {
+  academyId: string
+  academyName: string
+  role: AcademyRole
+  status: 'active' | 'pending'
+}
+
+/** Mirrors `public.profiles`; `username` is `null` for accounts that sign in with email. */
+export interface UserProfile {
+  id: string
+  username: string | null
+  displayName: string
+  mustChangePassword: boolean
+}
+
+/** A person in an academy, as seen by its staff. */
+export interface AcademyMember {
+  userId: string
+  username: string | null
+  displayName: string
+  role: AcademyRole
+  status: Membership['status']
+}
+
+export interface AddMemberInput {
+  academyId: string
+  role: 'coach' | 'guardian'
+  username: string
+  displayName?: string
+  cadetId?: string
+  relationship?: string
+}
+
+/** `temporaryPassword` is only returned when a new account was created; show it once. */
+export interface AddMemberResult {
+  userId: string
+  username: string
+  status: Membership['status']
+  created: boolean
+  temporaryPassword?: string
+}
+
+/** One coach assigned to one batch (`public.batch_coaches`). */
+export interface BatchCoach {
+  batchId: string
+  coachId: string
+}
+
+export interface MembershipService {
+  getProfile(userId: string): Promise<UserProfile | null>
+  /** Active and pending memberships of the user, in every academy. */
+  list(userId: string): Promise<Membership[]>
+  /** Accepts or declines a pending membership of the signed-in user. Rejects with a message safe to show. */
+  respond(academyId: string, accept: boolean): Promise<void>
+  /** Everyone in the academy, active and pending. Staff only. */
+  listMembers(academyId: string): Promise<AcademyMember[]>
+  /** Calls the `create-member` Edge Function. Rejects with a message safe to show. */
+  addMember(input: AddMemberInput): Promise<AddMemberResult>
+  /** Owner removes a coach or guardian; their batch and cadet links are cleared by the database. */
+  removeMember(academyId: string, userId: string): Promise<void>
+  /** Calls the `reset-member-password` Edge Function and returns the new temporary password. */
+  resetPassword(academyId: string, userId: string): Promise<string>
+  listBatchCoaches(academyId: string): Promise<BatchCoach[]>
+  setBatchCoach(batchId: string, coachId: string, assigned: boolean): Promise<void>
 }
 
 /** Mirrors a Supabase Storage bucket for user avatars. */
@@ -71,51 +148,56 @@ export interface AttendanceSheet {
   submittedAt: string | null
 }
 
+/** One cadet's mark on a submitted register. */
+export interface CadetAttendanceEntry {
+  date: string
+  batchId: string
+  status: AttendanceRecord['status']
+  lateMinutes?: number
+  note?: string
+}
+
 export type NetBatchInput = Omit<NetBatch, 'id'>
 
 export interface AttendanceRepository {
-  listBatches(coachId: string): Promise<NetBatch[]>
-  createBatch(coachId: string, input: NetBatchInput): Promise<NetBatch>
+  /** Batches of the academy that the signed-in user may see. */
+  listBatches(academyId: string): Promise<NetBatch[]>
+  createBatch(academyId: string, input: NetBatchInput): Promise<NetBatch>
   updateBatch(batch: NetBatch): Promise<NetBatch>
   /** Cadets in the batch become unassigned; its registers and session links are removed. */
   deleteBatch(batchId: string): Promise<void>
   listCadets(batchId: string): Promise<Cadet[]>
   getSheet(batchId: string, date: string): Promise<AttendanceSheet | null>
   saveSheet(sheet: AttendanceSheet): Promise<AttendanceSheet>
+  /** The cadet's marks on submitted registers, newest first. */
+  listCadetAttendance(cadetId: string, limit?: number): Promise<CadetAttendanceEntry[]>
 }
 
 /** Guardian details entered by the coach; `verified` is set only when the guardian accepts. */
-export type GuardianInviteInput = Omit<Guardian, 'verified'>
+export type GuardianInviteInput = Omit<Guardian, 'verified' | 'username'> & { username: string }
 
 /** Coach-editable cadet fields; an empty `batchId` means the cadet is not in a batch. */
 export type CadetInput = Pick<Cadet, 'name' | 'jersey' | 'ageGroup' | 'role' | 'battingHand' | 'bowlingStyle' | 'batchId'>
 
-/**
- * How the invite reached the guardian: `sent` over WhatsApp, or `manual` when the coach must share
- * `link` themselves (email contact, WhatsApp not configured, or the send failed — see `reason`).
- */
-export interface InviteDelivery {
-  status: 'sent' | 'manual'
-  link: string | null
-  reason?: string
-}
-
-export interface GuardianInviteResult {
+/** `member` is the account outcome from `create-member`; `null` in demo mode, where no account is created. */
+export interface GuardianAddResult {
   cadet: Cadet
-  delivery: InviteDelivery
+  member: AddMemberResult | null
 }
 
-/** Guardian details are stored on the cadet row; invites are issued and sent by the backend. */
+/** Guardian details are stored on the cadet row; guardian accounts are created by the backend. */
 export interface CadetRepository {
-  list(coachId: string): Promise<Cadet[]>
-  create(coachId: string, input: CadetInput): Promise<Cadet>
+  /** Cadets of the academy that the signed-in user may see. */
+  list(academyId: string): Promise<Cadet[]>
+  create(academyId: string, input: CadetInput): Promise<Cadet>
   update(cadetId: string, input: CadetInput): Promise<Cadet>
   /** Also deletes the cadet's logged net sessions. */
   remove(cadetId: string): Promise<void>
-  /** Creates or replaces the cadet's guardian invite and tries to deliver it. */
-  sendGuardianInvite(cadetId: string, guardian: GuardianInviteInput): Promise<GuardianInviteResult>
-  /** Issues a fresh link for a pending invite (older links stop working) and tries to deliver it. */
-  resendGuardianInvite(cadetId: string): Promise<GuardianInviteResult>
+  /**
+   * Links the cadet to the guardian with this username, creating the account if the username is new.
+   * Existing users stay `pending` until they accept the academy invitation.
+   */
+  addGuardian(academyId: string, cadetId: string, guardian: GuardianInviteInput): Promise<GuardianAddResult>
   /** Cancels a pending invite or removes a linked guardian. */
   unlinkGuardian(cadetId: string): Promise<Cadet>
 }
@@ -142,8 +224,8 @@ export interface GuardianInviteService {
 export interface TelemetryRepository {
   /** Returns `null` when the cadet has no logged sessions yet. */
   getBattingTelemetry(cadetId: string): Promise<BattingTelemetry | null>
-  /** Every cadet in the coach's squad, ranked by runs within their division. */
-  getLeaderboard(coachId: string): Promise<LeaderboardEntry[]>
+  /** Every cadet in the academy's squad, ranked by runs within their division. */
+  getLeaderboard(academyId: string): Promise<LeaderboardEntry[]>
   /** Sessions logged for a batch on one day, oldest first. */
   listNetSessions(batchId: string, date: string): Promise<NetSession[]>
   /** Logged deliveries are folded into the cadet's telemetry and leaderboard figures. */
@@ -159,12 +241,12 @@ export interface FeePaymentInput {
 
 /** Every change to a due also updates the cadet's `feeDue` total. */
 export interface FeeRepository {
-  getSettings(coachId: string): Promise<FeeSettings | null>
-  saveSettings(coachId: string, settings: FeeSettings): Promise<FeeSettings>
+  getSettings(academyId: string): Promise<FeeSettings | null>
+  saveSettings(academyId: string, settings: FeeSettings): Promise<FeeSettings>
   /** Newest due date first. */
-  list(coachId: string): Promise<FeeDue[]>
+  list(academyId: string): Promise<FeeDue[]>
   /** Raises the same due for each cadet. */
-  create(coachId: string, cadetIds: string[], input: FeeDueInput): Promise<FeeDue[]>
+  create(academyId: string, cadetIds: string[], input: FeeDueInput): Promise<FeeDue[]>
   markPaid(dueId: string, payment: FeePaymentInput): Promise<FeeDue>
   /** Waives a due, or reopens a paid or waived one with `due`. */
   setStatus(dueId: string, status: Exclude<FeeStatus, 'paid'>): Promise<FeeDue>
@@ -195,8 +277,8 @@ export type MatchPlanInput = Omit<MatchPlan, 'id' | 'updatedAt'>
 
 export interface TacticsRepository {
   /** Newest fixture first. */
-  list(coachId: string): Promise<MatchPlan[]>
-  create(coachId: string, input: MatchPlanInput): Promise<MatchPlan>
+  list(academyId: string): Promise<MatchPlan[]>
+  create(academyId: string, input: MatchPlanInput): Promise<MatchPlan>
   update(planId: string, input: MatchPlanInput): Promise<MatchPlan>
   remove(planId: string): Promise<void>
 }

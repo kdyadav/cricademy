@@ -5,7 +5,7 @@ import { BellRing, ChevronLeft, LoaderCircle, ReceiptIndianRupee, Settings, Smar
 import FeeDueSheet from '@/components/fees/FeeDueSheet.vue'
 import RaiseFeesSheet from '@/components/fees/RaiseFeesSheet.vue'
 import FeeSettingsSheet from '@/components/fees/FeeSettingsSheet.vue'
-import { useAuthStore } from '@/stores/auth'
+import { useAcademyStore } from '@/stores/academy'
 import { useCadetsStore } from '@/stores/cadets'
 import { useFeesStore } from '@/stores/fees'
 import { useOpsStore } from '@/stores/ops'
@@ -13,14 +13,14 @@ import { formatDueDate, formatInr, isOverdue } from '@/lib/fees'
 import { cn } from '@/lib/cn'
 import type { FeeDue } from '@/types'
 
-const auth = useAuthStore()
+const academy = useAcademyStore()
 const fees = useFeesStore()
 const cadets = useCadetsStore()
 const ops = useOpsStore()
 const { dues, settings, loading, error, open, overdue, toConfirm, outstandingTotal, overdueTotal, collectedThisMonth, today } = storeToRefs(fees)
 
 watch(
-  () => auth.user?.id,
+  () => academy.activeId,
   (id) => id && Promise.all([fees.load(id, true), cadets.load(id), ops.init(id)]),
   { immediate: true },
 )
@@ -66,9 +66,11 @@ function openSettings() {
       <header class="flex items-start justify-between gap-3">
         <div>
           <h1 class="font-serif text-2xl font-semibold">Fees</h1>
-          <p class="text-xs text-ink-muted">Raise dues, send PhonePe pay links and confirm payments.</p>
+          <p class="text-xs text-ink-muted">
+            {{ academy.isOwner ? 'Raise dues, send PhonePe pay links and confirm payments.' : 'See dues and send PhonePe pay links.' }}
+          </p>
         </div>
-        <div class="flex shrink-0 gap-1.5">
+        <div v-if="academy.isOwner" class="flex shrink-0 gap-1.5">
           <button type="button" class="grid size-9 place-items-center rounded-full border border-hairline hover:bg-app" aria-label="Payment settings" @click="openSettings">
             <Settings class="size-4" />
           </button>
@@ -79,7 +81,7 @@ function openSettings() {
       </header>
 
       <button
-        v-if="!loading && !settings"
+        v-if="academy.isOwner && !loading && !settings"
         type="button"
         class="flex w-full items-center gap-3 rounded-xl border border-dashed border-turf/50 bg-mint px-4 py-3 text-left text-xs text-turf-700"
         @click="openSettings"
@@ -129,7 +131,7 @@ function openSettings() {
       <div v-if="loading" class="grid place-items-center py-16 text-ink-muted"><LoaderCircle class="size-6 animate-spin" /></div>
       <p v-else-if="error" role="alert" class="px-4 py-12 text-center text-sm text-cherry">{{ error }}</p>
       <p v-else-if="!visible.length" class="px-4 py-12 text-center text-sm text-ink-muted">
-        {{ dues.length ? 'Nothing here.' : 'No fees raised yet. Tap Raise fees to bill your squad.' }}
+        {{ dues.length ? 'Nothing here.' : academy.isOwner ? 'No fees raised yet. Tap Raise fees to bill your squad.' : 'No fees raised yet.' }}
       </p>
       <ul v-else class="divide-y divide-hairline">
         <li v-for="d in visible" :key="d.id">
@@ -156,7 +158,9 @@ function openSettings() {
     </section>
 
     <FeeDueSheet v-model:open="sheetOpen" :due-id="sheetDueId" @setup="openSettings" />
-    <RaiseFeesSheet v-model:open="raiseOpen" />
-    <FeeSettingsSheet v-model:open="settingsOpen" />
+    <template v-if="academy.isOwner">
+      <RaiseFeesSheet v-model:open="raiseOpen" />
+      <FeeSettingsSheet v-model:open="settingsOpen" />
+    </template>
   </div>
 </template>

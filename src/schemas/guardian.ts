@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { USERNAME_PATTERN } from '@/lib/username'
 
 const EMAIL = z.string().email()
 /** Optional leading +, then 8–15 digits with spaces or dashes. */
@@ -10,6 +11,11 @@ const isPhone = (v: string) => {
 
 export const guardianInviteSchema = z.object({
   name: z.string().trim().min(2, "Enter the guardian's full name").max(60, 'Keep it under 60 characters'),
+  username: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(USERNAME_PATTERN, '3 to 30 letters, numbers, dots or underscores, starting with a letter or number'),
   contact: z
     .string()
     .trim()

@@ -25,7 +25,7 @@ export const useOpsStore = defineStore('ops', () => {
   const loading = ref(false)
   const saving = ref(false)
   const error = ref<string | null>(null)
-  let loadedForCoach: string | null = null
+  let loadedForAcademy: string | null = null
   let autosaveTimer: ReturnType<typeof setTimeout> | undefined
 
   const activeBatch = computed(() => batches.value.find((b) => b.id === activeBatchId.value) ?? null)
@@ -37,13 +37,16 @@ export const useOpsStore = defineStore('ops', () => {
   })
   const markedCount = computed(() => cadets.value.length - counts.value.unmarked)
 
-  async function init(coachId: string) {
-    if (loadedForCoach === coachId) return
+  async function init(academyId: string) {
+    if (loadedForAcademy === academyId) return
+    batches.value = []
+    cadets.value = []
+    records.value = {}
     loading.value = true
     error.value = null
     try {
-      batches.value = await attendanceRepository.listBatches(coachId)
-      loadedForCoach = coachId
+      batches.value = await attendanceRepository.listBatches(academyId)
+      loadedForAcademy = academyId
       await selectBatch(batches.value[0]?.id ?? null)
     } catch {
       error.value = 'Could not load net batches.'
@@ -142,10 +145,10 @@ export const useOpsStore = defineStore('ops', () => {
   const byStart = (a: NetBatch, b: NetBatch) => a.start.localeCompare(b.start)
 
   /** Creates a batch when `batchId` is omitted, otherwise updates it. */
-  async function saveBatch(coachId: string, input: NetBatchInput, batchId?: string) {
+  async function saveBatch(academyId: string, input: NetBatchInput, batchId?: string) {
     const saved = batchId
       ? await attendanceRepository.updateBatch({ ...input, id: batchId })
-      : await attendanceRepository.createBatch(coachId, input)
+      : await attendanceRepository.createBatch(academyId, input)
     batches.value = [...batches.value.filter((b) => b.id !== saved.id), saved].sort(byStart)
     useNetsStore().invalidate()
     if (!activeBatchId.value) await selectBatch(saved.id)
