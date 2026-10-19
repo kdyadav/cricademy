@@ -2,8 +2,9 @@
 import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
-import { Check, ChevronLeft, KeyRound, LoaderCircle, LogOut, Users } from 'lucide-vue-next'
+import { Check, ChevronLeft, KeyRound, LoaderCircle, LogOut, Pencil, Users } from 'lucide-vue-next'
 import AcademyCrest from '@/components/layout/AcademyCrest.vue'
+import RenameAcademySheet from '@/components/members/RenameAcademySheet.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAcademyStore } from '@/stores/academy'
 import type { AcademyRole } from '@/services'
@@ -16,6 +17,7 @@ const { activeMemberships, pending, activeId, profile } = storeToRefs(academy)
 
 const ROLE_LABELS: Record<AcademyRole, string> = { owner: 'Owner', coach: 'Coach', guardian: 'Guardian' }
 
+const renameOpen = ref(false)
 const busyId = ref<string | null>(null)
 const actionError = ref<string | null>(null)
 
@@ -125,6 +127,14 @@ async function signOut() {
         >
           <Users class="size-4" /> Manage members of {{ academy.active?.academyName }}
         </RouterLink>
+        <button
+          v-if="academy.isOwner"
+          type="button"
+          class="inline-flex items-center justify-center gap-1.5 rounded-full border border-hairline py-3 text-sm font-semibold text-ink hover:bg-card"
+          @click="renameOpen = true"
+        >
+          <Pencil class="size-4" /> Rename academy
+        </button>
         <RouterLink
           :to="{ name: 'change-password' }"
           class="inline-flex items-center justify-center gap-1.5 rounded-full border border-hairline py-3 text-sm font-semibold text-ink hover:bg-card"
@@ -140,5 +150,6 @@ async function signOut() {
         </button>
       </div>
     </div>
+    <RenameAcademySheet v-model:open="renameOpen" />
   </div>
 </template>

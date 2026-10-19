@@ -48,6 +48,10 @@ export function createSupabaseMembershipService(client: SupabaseClient): Members
       if (error?.code === 'P0002') throw new Error('This invitation is no longer available.')
       if (error) throw new Error(accept ? 'Could not accept the invitation.' : 'Could not decline the invitation.')
     },
+    async renameAcademy(academyId, name) {
+      const { data, error } = await client.from('academies').update({ name }).eq('id', academyId).select('id')
+      if (error || !data?.length) throw new Error('Could not rename the academy.')
+    },
     async listMembers(academyId) {
       const { data: rows, error } = await client
         .from('academy_members')

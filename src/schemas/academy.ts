@@ -16,6 +16,12 @@ export const netBatchSchema = z
 
 export type NetBatchFormInput = z.infer<typeof netBatchSchema>
 
+export const academyNameSchema = z.object({
+  name: z.string().trim().min(1, 'Enter the academy name').max(120, 'Keep it under 120 characters'),
+})
+
+export type AcademyNameFormInput = z.infer<typeof academyNameSchema>
+
 export const cadetSchema = z.object({
   name: z.string().trim().min(2, "Enter the cadet's full name").max(80, 'Keep it under 80 characters'),
   jersey: z.coerce

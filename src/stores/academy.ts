@@ -46,6 +46,11 @@ export const useAcademyStore = defineStore('academy', () => {
     if (accept) select(academyId)
   }
 
+  async function rename(academyId: string, name: string) {
+    await membershipService.renameAcademy(academyId, name)
+    memberships.value = memberships.value.map((m) => (m.academyId === academyId ? { ...m, academyName: name } : m))
+  }
+
   function markPasswordChanged() {
     if (profile.value) profile.value = { ...profile.value, mustChangePassword: false }
   }
@@ -71,6 +76,7 @@ export const useAcademyStore = defineStore('academy', () => {
     select,
     load,
     respond,
+    rename,
     markPasswordChanged,
     reset,
   }

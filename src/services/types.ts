@@ -121,6 +121,8 @@ export interface MembershipService {
   list(userId: string): Promise<Membership[]>
   /** Accepts or declines a pending membership of the signed-in user. Rejects with a message safe to show. */
   respond(academyId: string, accept: boolean): Promise<void>
+  /** Owner only. Rejects with a message safe to show. */
+  renameAcademy(academyId: string, name: string): Promise<void>
   /** Everyone in the academy, active and pending. Staff only. */
   listMembers(academyId: string): Promise<AcademyMember[]>
   /** Calls the `create-member` Edge Function. Rejects with a message safe to show. */

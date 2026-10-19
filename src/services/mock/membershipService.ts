@@ -16,6 +16,9 @@ export function createMockMembershipService(): MembershipService {
     async respond() {
       throw new Error('Academy invitations need Supabase.')
     },
+    async renameAcademy() {
+      throw new Error('Renaming the academy needs Supabase.')
+    },
     async listMembers() {
       return []
     },
