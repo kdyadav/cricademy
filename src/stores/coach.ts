@@ -1,8 +1,7 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import type { AppNotification, CoachProfile } from '@/types'
+import type { CoachProfile } from '@/types'
 import type { CoachProfileInput } from '@/schemas/coach'
-import { mockNotifications } from '@/data/mock'
 import { coachRepository, storageService } from '@/services'
 import { useAuthStore } from './auth'
 
@@ -11,9 +10,7 @@ export const useCoachStore = defineStore('coach', () => {
   const profile = ref<CoachProfile | null>(null)
   const loadedForUserId = ref<string | null>(null)
   const coachModeActive = ref(true)
-  const notifications = ref<AppNotification[]>(structuredClone(mockNotifications))
 
-  const unreadCount = computed(() => notifications.value.filter((n) => !n.read).length)
   const hasProfile = computed(() => profile.value !== null)
 
   async function load(userId: string) {
@@ -47,19 +44,12 @@ export const useCoachStore = defineStore('coach', () => {
     loadedForUserId.value = null
   }
 
-  function markAllRead() {
-    notifications.value.forEach((n) => (n.read = true))
-  }
-
   return {
     profile,
     hasProfile,
     coachModeActive,
-    notifications,
-    unreadCount,
     load,
     saveProfile,
     reset,
-    markAllRead,
   }
 })

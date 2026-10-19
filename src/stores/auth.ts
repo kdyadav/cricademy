@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { authService, type AuthSession, type PasswordCredentials, type SignInCredentials } from '@/services'
+import { useNotificationsStore } from './notifications'
 
 export const useAuthStore = defineStore('auth', () => {
   const session = ref<AuthSession | null>(null)
@@ -39,6 +40,7 @@ export const useAuthStore = defineStore('auth', () => {
   const sendMagicLink = (email: string, redirectTo: string) => authService.sendMagicLink(email, redirectTo)
 
   async function signOut() {
+    await useNotificationsStore().detach()
     await authService.signOut()
     session.value = null
   }

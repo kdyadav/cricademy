@@ -39,11 +39,13 @@ export const mockBatches: NetBatch[] = [
   },
 ]
 
+const minutesAgo = (mins: number) => new Date(Date.now() - mins * 60_000).toISOString()
+
 export const mockNotifications: AppNotification[] = [
-  { id: 'n1', title: 'Fee overdue', body: 'Kabir Singh — $225 pending for October', time: '8m', read: false, tone: 'alert' },
-  { id: 'n2', title: 'Invite opened', body: "Devin Miller's guardian viewed the WhatsApp invite", time: '32m', read: false, tone: 'info' },
-  { id: 'n3', title: 'Injury flag', body: 'Ishaan Verma reported mild calf tightness', time: '1h', read: false, tone: 'alert' },
-  { id: 'n4', title: 'Scout request', body: 'State selector requested Aarav Sharma dossier', time: '3h', read: true, tone: 'success' },
+  { id: 'n1', title: 'Fee overdue', body: 'Kabir Singh — $225 pending for October', createdAt: minutesAgo(8), read: false, tone: 'alert', url: '/fees' },
+  { id: 'n2', title: 'Invite opened', body: "Devin Miller's guardian viewed the WhatsApp invite", createdAt: minutesAgo(32), read: false, tone: 'info', url: '/cadets' },
+  { id: 'n3', title: 'Injury flag', body: 'Ishaan Verma reported mild calf tightness', createdAt: minutesAgo(60), read: false, tone: 'alert' },
+  { id: 'n4', title: 'Scout request', body: 'State selector requested Aarav Sharma dossier', createdAt: minutesAgo(180), read: true, tone: 'success' },
 ]
 
 const g = (name: string, contact: string, relationship: Guardian['relationship']): Guardian => ({

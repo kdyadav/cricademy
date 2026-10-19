@@ -28,6 +28,16 @@ export function minutesUntil(iso: string, now = new Date()) {
   return Math.floor((new Date(iso).getTime() - now.getTime()) / 60_000)
 }
 
+/** Short age of an ISO timestamp: `now`, `8m`, `3h`, `2d`, then `5 Oct`. */
+export function timeAgo(iso: string, now = new Date()) {
+  const mins = Math.max(0, Math.floor((now.getTime() - new Date(iso).getTime()) / 60_000))
+  if (mins < 1) return 'now'
+  if (mins < 60) return `${mins}m`
+  if (mins < 60 * 24) return `${Math.floor(mins / 60)}h`
+  if (mins < 60 * 24 * 7) return `${Math.floor(mins / (60 * 24))}d`
+  return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+}
+
 /** `95` -> `1h 35m` */
 export function formatDuration(mins: number) {
   const h = Math.floor(mins / 60)

@@ -156,11 +156,13 @@ export interface LeaderboardEntry {
   division: AgeGroup
 }
 
+/** Mirrors `public.notifications`; `url` is an in-app path to open when tapped. */
 export interface AppNotification {
   id: string
   title: string
   body: string
-  time: string
+  createdAt: string
   read: boolean
   tone: 'info' | 'alert' | 'success'
+  url?: string
 }

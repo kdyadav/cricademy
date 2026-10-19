@@ -4,6 +4,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
+import { registerServiceWorker } from './lib/push'
 
 const app = createApp(App)
 
@@ -11,6 +12,7 @@ app.use(createPinia())
 app.use(router)
 
 app.mount('#app')
+registerServiceWorker()
 
 // Keep the splash up until the first screen is resolved, and long enough not to flicker.
 const SPLASH_MIN_MS = 900

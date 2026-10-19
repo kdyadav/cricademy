@@ -7,6 +7,7 @@ import type {
   FeeRepository,
   GuardianInviteService,
   MembershipService,
+  NotificationService,
   StorageService,
   TelemetryRepository,
 } from './types'
@@ -19,6 +20,7 @@ import { createMockTelemetryRepository } from './mock/telemetryRepository'
 import { createMockGuardianInviteService } from './mock/guardianInviteService'
 import { createMockFeePaymentService, createMockFeeRepository } from './mock/feeRepository'
 import { createMockMembershipService } from './mock/membershipService'
+import { createMockNotificationService } from './mock/notificationService'
 import { createSupabaseAuthService } from './supabase/auth'
 import { createSupabaseCoachRepository } from './supabase/coachRepository'
 import { createSupabaseStorageService } from './supabase/storage'
@@ -28,6 +30,7 @@ import { createSupabaseTelemetryRepository } from './supabase/telemetryRepositor
 import { createSupabaseGuardianInviteService } from './supabase/guardianInviteService'
 import { createSupabaseFeePaymentService, createSupabaseFeeRepository } from './supabase/feeRepository'
 import { createSupabaseMembershipService } from './supabase/membershipService'
+import { createSupabaseNotificationService } from './supabase/notificationService'
 import { supabase } from '@/lib/supabase'
 
 /** True when VITE_SUPABASE_* env vars are set; every repository then reads and writes Supabase. */
@@ -54,5 +57,8 @@ export const feeRepository: FeeRepository = supabase ? createSupabaseFeeReposito
 export const feePaymentService: FeePaymentService = supabase
   ? createSupabaseFeePaymentService(supabase)
   : createMockFeePaymentService()
+export const notificationService: NotificationService = supabase
+  ? createSupabaseNotificationService(supabase)
+  : createMockNotificationService()
 
 export type * from './types'

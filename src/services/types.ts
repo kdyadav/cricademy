@@ -1,4 +1,5 @@
 import type {
+  AppNotification,
   AttendanceRecord,
   BattingTelemetry,
   Cadet,
@@ -270,5 +271,27 @@ export interface FeePaymentService {
   preview(dueId: string): Promise<FeePaymentPreview | null>
   /** Sends the UPI transaction reference for the coach to confirm. Rejects with a message safe to show. */
   report(dueId: string, reference: string): Promise<void>
+}
+
+/** A browser Web Push subscription; the keys come from `PushSubscription.toJSON()`. */
+export interface PushSubscriptionInput {
+  endpoint: string
+  p256dh: string
+  auth: string
+  userAgent: string
+}
+
+/** Notifications are created by the backend on academy events; the client only reads and marks them. */
+export interface NotificationService {
+  /** `false` in demo mode, where there is no server to send pushes. */
+  readonly pushAvailable: boolean
+  /** The signed-in user's notifications, newest first. */
+  list(limit?: number): Promise<AppNotification[]>
+  markRead(ids: string[]): Promise<void>
+  /** Calls `handler` for each notification created for the user while subscribed. Returns an unsubscribe function. */
+  subscribe(userId: string, handler: (notification: AppNotification) => void): () => void
+  /** Registers this device for push; a device used by another account moves to the signed-in user. */
+  savePushSubscription(input: PushSubscriptionInput): Promise<void>
+  removePushSubscription(endpoint: string): Promise<void>
 }
 

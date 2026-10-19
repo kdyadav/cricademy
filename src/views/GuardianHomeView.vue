@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { ChevronRight, LoaderCircle } from 'lucide-vue-next'
 import AcademyCrest from '@/components/layout/AcademyCrest.vue'
+import NotificationBell from '@/components/layout/NotificationBell.vue'
 import GuardianCadetCard from '@/components/cadets/GuardianCadetCard.vue'
 import { useAcademyStore } from '@/stores/academy'
 import { useCadetsStore } from '@/stores/cadets'
@@ -36,18 +37,21 @@ const duesOf = (cadetId: string) => fees.dues.filter((d) => d.cadetId === cadetI
 <template>
   <div class="flex min-h-0 flex-1 flex-col overflow-y-auto bg-app">
     <header class="shrink-0 bg-card">
-      <RouterLink
-        :to="{ name: 'academies' }"
-        class="flex items-center gap-3 px-5 pt-[max(env(safe-area-inset-top),0.875rem)] pb-3.5 hover:bg-app"
-      >
-        <AcademyCrest />
-        <div class="min-w-0 flex-1">
-          <p class="truncate font-serif text-[17px] leading-tight font-semibold tracking-tight">{{ academy.active?.academyName }}</p>
-          <p class="mt-0.5 text-[11px] font-medium text-ink-muted">Guardian</p>
-        </div>
-        <span v-if="academy.pending.length" class="size-2 rounded-full bg-cherry" aria-label="New invitation" />
-        <ChevronRight class="size-4 text-ink-muted" />
-      </RouterLink>
+      <div class="flex items-center gap-2 pt-[max(env(safe-area-inset-top),0.875rem)] pr-5 pb-3.5">
+        <RouterLink
+          :to="{ name: 'academies' }"
+          class="flex min-w-0 flex-1 items-center gap-3 rounded-r-xl py-1 pl-5 pr-2 hover:bg-app"
+        >
+          <AcademyCrest />
+          <div class="min-w-0 flex-1">
+            <p class="truncate font-serif text-[17px] leading-tight font-semibold tracking-tight">{{ academy.active?.academyName }}</p>
+            <p class="mt-0.5 text-[11px] font-medium text-ink-muted">Guardian</p>
+          </div>
+          <span v-if="academy.pending.length" class="size-2 rounded-full bg-cherry" aria-label="New invitation" />
+          <ChevronRight class="size-4 text-ink-muted" />
+        </RouterLink>
+        <NotificationBell />
+      </div>
       <div class="h-[3px] outfield-stripes" aria-hidden="true" />
     </header>
 
