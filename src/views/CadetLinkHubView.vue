@@ -5,6 +5,7 @@ import { ChevronRight, IndianRupee, LoaderCircle, Search, UserPlus } from 'lucid
 import CadetLinkRow from '@/components/cadets/CadetLinkRow.vue'
 import GuardianLinkSheet from '@/components/cadets/GuardianLinkSheet.vue'
 import CadetFormSheet from '@/components/cadets/CadetFormSheet.vue'
+import CadetsSegments from '@/components/cadets/CadetsSegments.vue'
 import { useAcademyStore } from '@/stores/academy'
 import { useCadetsStore } from '@/stores/cadets'
 import { useOpsStore } from '@/stores/ops'
@@ -38,7 +39,7 @@ const filters = computed(() => [
   { value: 'linked' as Filter, label: 'Linked', count: linkCounts.value.linked },
   { value: 'pending' as Filter, label: 'Pending', count: linkCounts.value.pending },
   { value: 'unlinked' as Filter, label: 'No guardian', count: linkCounts.value.unlinked },
-  { value: 'fees' as Filter, label: 'Fees due', count: feesDueCount.value },
+  ...(academy.isOwner ? [{ value: 'fees' as Filter, label: 'Fees due', count: feesDueCount.value }] : []),
 ])
 
 const coverage = computed(() => (cadets.value.length ? Math.round((linkCounts.value.linked / cadets.value.length) * 100) : 0))
@@ -80,6 +81,7 @@ function openForm(cadetId: string | null) {
 <template>
   <div class="flex min-h-full flex-col">
     <div class="space-y-4 px-4 pt-5 pb-4">
+      <CadetsSegments />
       <header class="flex items-start justify-between gap-3">
         <div>
           <h1 class="font-serif text-2xl font-semibold">Squad &amp; guardians</h1>
@@ -101,6 +103,7 @@ function openForm(cadetId: string | null) {
             <p class="font-serif text-3xl leading-none font-semibold tabular-nums">{{ coverage }}<span class="text-lg">%</span></p>
           </div>
           <RouterLink
+            v-if="academy.isOwner"
             :to="{ name: 'fees' }"
             :class="
               cn(

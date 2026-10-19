@@ -52,12 +52,6 @@ const router = createRouter({
       meta: { title: 'Academies' },
     },
     {
-      path: '/members',
-      name: 'members',
-      component: () => import('@/views/MembersView.vue'),
-      meta: { title: 'Members' },
-    },
-    {
       path: '/home',
       name: 'guardian-home',
       component: () => import('@/views/GuardianHomeView.vue'),
@@ -74,9 +68,8 @@ const router = createRouter({
       component: MobileAppLayout,
       redirect: '/ops',
       children: [
-        { path: 'ops', name: 'ops', component: () => import('@/views/DailyOpsView.vue'), meta: { tab: 'ops' } },
+        { path: 'ops', name: 'ops', component: () => import('@/views/DailyOpsView.vue'), meta: { tab: 'cadets' } },
         { path: 'cadets', name: 'cadets', component: () => import('@/views/CadetLinkHubView.vue'), meta: { tab: 'cadets' } },
-        { path: 'cadets/fees', name: 'fees', component: () => import('@/views/FeesView.vue'), meta: { tab: 'cadets' } },
         {
           path: 'cadets/:id',
           name: 'player-stats',
@@ -84,9 +77,9 @@ const router = createRouter({
           props: true,
           meta: { tab: 'cadets' },
         },
-        { path: 'nets', name: 'nets', component: () => import('@/views/NetsTelemetryView.vue'), meta: { tab: 'nets' } },
-        { path: 'tactics', name: 'tactics', component: () => import('@/views/TacticsView.vue'), meta: { tab: 'tactics' } },
-        { path: 'showcase', name: 'showcase', component: () => import('@/views/TalentShowcaseView.vue'), meta: { tab: 'showcase' } },
+        { path: 'nets', name: 'nets', component: () => import('@/views/NetsTelemetryView.vue'), meta: { tab: 'cadets' } },
+        { path: 'fees', name: 'fees', component: () => import('@/views/FeesView.vue'), meta: { tab: 'fees' } },
+        { path: 'coaches', name: 'members', component: () => import('@/views/MembersView.vue'), meta: { tab: 'coaches' } },
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: '/ops' },
@@ -132,7 +125,7 @@ router.beforeEach(async (to) => {
   // A first coach profile also creates the user's own academy, so onboarding comes before having one.
   if (!coach.hasProfile) return to.name === 'onboarding' || { name: 'onboarding' }
   if (!academy.active) return { name: 'academies' }
-  if (to.name === 'members' && !academy.isOwner) return { path: '/ops' }
+  if ((to.name === 'members' || to.name === 'fees') && !academy.isOwner) return { path: '/ops' }
   return true
 })
 

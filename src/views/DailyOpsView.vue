@@ -6,6 +6,7 @@ import BatchSwitcher from '@/components/ops/BatchSwitcher.vue'
 import BatchFormSheet from '@/components/ops/BatchFormSheet.vue'
 import AttendanceSummary from '@/components/ops/AttendanceSummary.vue'
 import CadetAttendanceRow from '@/components/ops/CadetAttendanceRow.vue'
+import CadetsSegments from '@/components/cadets/CadetsSegments.vue'
 import { useAcademyStore } from '@/stores/academy'
 import { useCoachStore } from '@/stores/coach'
 import { useOpsStore } from '@/stores/ops'
@@ -100,6 +101,7 @@ async function importSchedules() {
 <template>
   <div class="flex min-h-full flex-col">
     <div class="space-y-4 px-4 pt-5 pb-4">
+      <CadetsSegments />
       <header>
         <p class="inline-flex items-center gap-1.5 text-xs font-medium text-ink-muted"><CalendarDays class="size-3.5" /> {{ today }}</p>
         <h1 class="mt-0.5 font-serif text-2xl font-semibold">{{ greeting }}</h1>

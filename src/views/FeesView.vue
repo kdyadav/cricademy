@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { BellRing, ChevronLeft, LoaderCircle, ReceiptIndianRupee, Settings, Smartphone } from 'lucide-vue-next'
+import { BellRing, LoaderCircle, ReceiptIndianRupee, Settings, Smartphone } from 'lucide-vue-next'
 import FeeDueSheet from '@/components/fees/FeeDueSheet.vue'
 import RaiseFeesSheet from '@/components/fees/RaiseFeesSheet.vue'
 import FeeSettingsSheet from '@/components/fees/FeeSettingsSheet.vue'
@@ -59,10 +59,7 @@ function openSettings() {
 
 <template>
   <div class="flex min-h-full flex-col">
-    <div class="space-y-4 px-4 pt-3 pb-4">
-      <RouterLink :to="{ name: 'cadets' }" class="-ml-1 inline-flex items-center gap-0.5 rounded-full px-1 py-1 text-xs font-semibold text-ink-muted hover:text-ink">
-        <ChevronLeft class="size-4" /> Squad
-      </RouterLink>
+    <div class="space-y-4 px-4 pt-5 pb-4">
       <header class="flex items-start justify-between gap-3">
         <div>
           <h1 class="font-serif text-2xl font-semibold">Fees</h1>

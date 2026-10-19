@@ -8,7 +8,6 @@ import type {
   FeeStatus,
   Guardian,
   LeaderboardEntry,
-  MatchPlan,
   NetBatch,
   NetSession,
   PaymentMethod,
@@ -273,12 +272,3 @@ export interface FeePaymentService {
   report(dueId: string, reference: string): Promise<void>
 }
 
-export type MatchPlanInput = Omit<MatchPlan, 'id' | 'updatedAt'>
-
-export interface TacticsRepository {
-  /** Newest fixture first. */
-  list(academyId: string): Promise<MatchPlan[]>
-  create(academyId: string, input: MatchPlanInput): Promise<MatchPlan>
-  update(planId: string, input: MatchPlanInput): Promise<MatchPlan>
-  remove(planId: string): Promise<void>
-}

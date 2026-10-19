@@ -1,21 +1,25 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CalendarCheck, Users, Activity, Shield, Trophy } from 'lucide-vue-next'
-import { useUiStore, type TabKey } from '@/stores/ui'
+import { IndianRupee, Users, UserCog } from 'lucide-vue-next'
+import { useUiStore, TAB_ROOTS, type TabKey } from '@/stores/ui'
+import { useAcademyStore } from '@/stores/academy'
 import { cn } from '@/lib/cn'
 
 const route = useRoute()
 const router = useRouter()
 const ui = useUiStore()
+const academy = useAcademyStore()
 
-const tabs: { key: TabKey; label: string; icon: typeof Users }[] = [
-  { key: 'ops', label: 'Ops', icon: CalendarCheck },
-  { key: 'cadets', label: 'Cadets', icon: Users },
-  { key: 'nets', label: 'Nets', icon: Activity },
-  { key: 'tactics', label: 'Tactics', icon: Shield },
-  { key: 'showcase', label: 'Showcase', icon: Trophy },
-]
+const tabs = computed<{ key: TabKey; label: string; icon: typeof Users }[]>(() =>
+  academy.isOwner
+    ? [
+        { key: 'cadets', label: 'Cadets', icon: Users },
+        { key: 'fees', label: 'Fees', icon: IndianRupee },
+        { key: 'coaches', label: 'Coaches', icon: UserCog },
+      ]
+    : [],
+)
 
 const activeTab = computed(() => route.meta.tab as TabKey | undefined)
 
@@ -23,7 +27,7 @@ function go(tab: TabKey) {
   // Re-tapping the active tab pops back to its root; otherwise restore its last stack position
   if (activeTab.value === tab) {
     ui.resetTab(tab)
-    router.push(`/${tab}`)
+    router.push(TAB_ROOTS[tab])
   } else {
     router.push(ui.lastPathByTab[tab])
   }
@@ -31,8 +35,8 @@ function go(tab: TabKey) {
 </script>
 
 <template>
-  <nav class="relative z-30 shrink-0 border-t border-hairline bg-card pb-safe" aria-label="Primary">
-    <ul class="grid grid-cols-5 px-1 pt-1.5">
+  <nav v-if="tabs.length" class="relative z-30 shrink-0 border-t border-hairline bg-card pb-safe" aria-label="Primary">
+    <ul class="grid grid-cols-3 px-1 pt-1.5">
       <li v-for="t in tabs" :key="t.key">
         <button
           :class="

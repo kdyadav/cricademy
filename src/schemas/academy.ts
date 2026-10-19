@@ -32,12 +32,3 @@ export const cadetSchema = z.object({
 
 export type CadetFormInput = z.infer<typeof cadetSchema>
 
-export const matchPlanSchema = z.object({
-  opponent: z.string().trim().min(2, 'Enter the opponent').max(80, 'Keep it under 80 characters'),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Pick the match date'),
-  venue: z.string().trim().max(80, 'Keep it under 80 characters'),
-  format: z.enum(['T20', 'One-day', 'Two-day', 'Friendly']),
-  ageGroup: AGE_GROUP,
-})
-
-export type MatchPlanFormInput = z.infer<typeof matchPlanSchema>

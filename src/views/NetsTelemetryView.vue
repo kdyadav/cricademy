@@ -7,6 +7,7 @@ import BatchSwitcher from '@/components/ops/BatchSwitcher.vue'
 import DeliveryPad from '@/components/nets/DeliveryPad.vue'
 import SessionScoreboard from '@/components/nets/SessionScoreboard.vue'
 import UiAvatar from '@/components/ui/UiAvatar.vue'
+import CadetsSegments from '@/components/cadets/CadetsSegments.vue'
 import { useAcademyStore } from '@/stores/academy'
 import { useNetsStore } from '@/stores/nets'
 import { formatOvers, summarize } from '@/lib/netSession'
@@ -43,6 +44,7 @@ function discard() {
 
 <template>
   <div class="space-y-4 px-4 pt-5 pb-6">
+    <CadetsSegments />
     <header>
       <h1 class="font-serif text-2xl font-semibold">Nets telemetry</h1>
       <p class="text-xs text-ink-muted">Log every ball faced. Saved sessions update player stats and the leaderboard.</p>
@@ -52,7 +54,7 @@ function discard() {
 
     <div v-if="loading" class="grid place-items-center py-16 text-ink-muted"><LoaderCircle class="size-6 animate-spin" /></div>
     <p v-else-if="!batches.length && !error" class="py-16 text-center text-sm text-ink-muted">
-      No net batches yet. Add one in <RouterLink :to="{ name: 'ops' }" class="font-semibold text-turf">Daily Ops</RouterLink>.
+      No net batches yet. Add one in the <RouterLink :to="{ name: 'ops' }" class="font-semibold text-turf">Register</RouterLink>.
     </p>
     <p v-else-if="!roster.length && !error" class="py-16 text-center text-sm text-ink-muted">
       No cadets in this batch yet. Assign them in the <RouterLink :to="{ name: 'cadets' }" class="font-semibold text-turf">Squad</RouterLink> tab.

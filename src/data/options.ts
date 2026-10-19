@@ -6,14 +6,12 @@ import type {
   GuardianPermission,
   GuardianRelationship,
   LinkStatus,
-  MatchFormat,
   PlayingRole,
   ShotZone,
 } from '@/types'
 
 export const AGE_GROUP_OPTIONS: AgeGroup[] = ['U-14', 'U-16', 'U-19']
 export const ROLE_OPTIONS: PlayingRole[] = ['Batter', 'Bowler', 'All-Rounder', 'Wicketkeeper']
-export const MATCH_FORMAT_OPTIONS: MatchFormat[] = ['T20', 'One-day', 'Two-day', 'Friendly']
 
 export const ACCREDITATION_OPTIONS: { value: Accreditation; label: string; body: string }[] = [
   { value: 'ECB_L3', label: 'ECB Level 3', body: 'England & Wales Cricket Board' },

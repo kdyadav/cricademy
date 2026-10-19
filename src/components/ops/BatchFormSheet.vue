@@ -75,7 +75,7 @@ function remove() {
   <BottomSheet
     v-model:open="open"
     :title="batch ? 'Edit batch' : 'New batch'"
-    :description="batch ? 'Changes apply to Daily Ops and Nets.' : 'Cadets can be assigned to it from the Squad tab.'"
+    :description="batch ? 'Changes apply to the Register and Nets.' : 'Cadets can be assigned to it from the Squad tab.'"
   >
     <p v-if="failure" role="alert" class="mb-3 rounded-lg bg-cherry-soft px-3 py-2 text-xs text-cherry">{{ failure }}</p>
     <form class="space-y-4" novalidate @submit.prevent="onSubmit">

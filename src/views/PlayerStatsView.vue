@@ -97,7 +97,7 @@ const sheetOpen = ref(false)
               <ShieldCheck v-else class="size-3" />
               {{ cadet.linkStatus === 'unlinked' ? 'Invite guardian' : LINK_STATUS_LABELS[cadet.linkStatus] }}
             </button>
-            <span v-if="cadet.feeDue" class="inline-flex items-center gap-1 rounded-full bg-cherry-soft px-2 py-0.5 text-cherry">
+            <span v-if="academy.isOwner && cadet.feeDue" class="inline-flex items-center gap-1 rounded-full bg-cherry-soft px-2 py-0.5 text-cherry">
               <IndianRupee class="size-3" /> {{ formatInr(cadet.feeDue) }} due
             </span>
           </div>

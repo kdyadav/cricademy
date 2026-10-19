@@ -8,7 +8,6 @@ import type {
   GuardianInviteService,
   MembershipService,
   StorageService,
-  TacticsRepository,
   TelemetryRepository,
 } from './types'
 import { createMockAuthService } from './mock/auth'
@@ -17,7 +16,6 @@ import { createMockStorageService } from './mock/storage'
 import { createMockAttendanceRepository } from './mock/attendanceRepository'
 import { createMockCadetRepository } from './mock/cadetRepository'
 import { createMockTelemetryRepository } from './mock/telemetryRepository'
-import { createMockTacticsRepository } from './mock/tacticsRepository'
 import { createMockGuardianInviteService } from './mock/guardianInviteService'
 import { createMockFeePaymentService, createMockFeeRepository } from './mock/feeRepository'
 import { createMockMembershipService } from './mock/membershipService'
@@ -27,7 +25,6 @@ import { createSupabaseStorageService } from './supabase/storage'
 import { createSupabaseAttendanceRepository } from './supabase/attendanceRepository'
 import { createSupabaseCadetRepository } from './supabase/cadetRepository'
 import { createSupabaseTelemetryRepository } from './supabase/telemetryRepository'
-import { createSupabaseTacticsRepository } from './supabase/tacticsRepository'
 import { createSupabaseGuardianInviteService } from './supabase/guardianInviteService'
 import { createSupabaseFeePaymentService, createSupabaseFeeRepository } from './supabase/feeRepository'
 import { createSupabaseMembershipService } from './supabase/membershipService'
@@ -50,7 +47,6 @@ export const cadetRepository: CadetRepository = supabase ? createSupabaseCadetRe
 export const telemetryRepository: TelemetryRepository = supabase
   ? createSupabaseTelemetryRepository(supabase)
   : createMockTelemetryRepository()
-export const tacticsRepository: TacticsRepository = supabase ? createSupabaseTacticsRepository(supabase) : createMockTacticsRepository()
 export const guardianInviteService: GuardianInviteService = supabase
   ? createSupabaseGuardianInviteService(supabase)
   : createMockGuardianInviteService()

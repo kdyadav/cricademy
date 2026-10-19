@@ -156,23 +156,6 @@ export interface LeaderboardEntry {
   division: AgeGroup
 }
 
-export type MatchFormat = 'T20' | 'One-day' | 'Two-day' | 'Friendly'
-
-/** A fixture with its selected playing XI; `xi` holds cadet ids in batting order. */
-export interface MatchPlan {
-  id: string
-  opponent: string
-  date: string
-  venue: string
-  format: MatchFormat
-  ageGroup: AgeGroup
-  xi: string[]
-  captainId: string | null
-  keeperId: string | null
-  notes: string
-  updatedAt: string
-}
-
 export interface AppNotification {
   id: string
   title: string

@@ -6,7 +6,9 @@ import type { Cadet } from '@/types'
 import { formatDuration, minutesUntil } from '@/lib/time'
 import { cn } from '@/lib/cn'
 import { formatInr } from '@/lib/fees'
+import { useAcademyStore } from '@/stores/academy'
 
+const academy = useAcademyStore()
 const props = defineProps<{ cadet: Cadet; now: Date }>()
 const emit = defineEmits<{ manage: [] }>()
 
@@ -43,7 +45,7 @@ const expiresIn = computed(() =>
             <template v-else>{{ expiresIn <= 0 ? 'Invite expired' : `Invite · ${formatDuration(expiresIn)} left` }}</template>
           </span>
           <span v-else class="inline-flex items-center gap-0.5 rounded bg-app px-1 text-ink-muted"><Link2Off class="size-3" /> No guardian</span>
-          <span v-if="cadet.feeDue" class="inline-flex items-center gap-0.5 rounded bg-cherry-soft px-1 text-cherry">
+          <span v-if="academy.isOwner && cadet.feeDue" class="inline-flex items-center gap-0.5 rounded bg-cherry-soft px-1 text-cherry">
             <IndianRupee class="size-3" /> {{ formatInr(cadet.feeDue) }} due
           </span>
         </span>
